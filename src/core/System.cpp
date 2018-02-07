@@ -23,16 +23,19 @@
 #include "solarus/graphics/Color.h"
 #include "solarus/graphics/Sprite.h"
 #include "solarus/graphics/Video.h"
+#include <SFML/System/Sleep.hpp>
 #include <SDL.h>
 #ifdef SOLARUS_USE_APPLE_POOL
 #  include "lowlevel/apple/AppleInterface.h"
 #endif
 
+
+
 namespace Solarus {
 
 uint32_t System::initial_time = 0;
 uint32_t System::ticks = 0;
-
+sf::Clock System::clock;
 /**
  * \brief Initializes the basic low-level system.
  *
@@ -130,7 +133,8 @@ uint32_t System::now() {
  * \return The number of milliseconds elapsed since the initialization.
  */
 uint32_t System::get_real_time() {
-  return SDL_GetTicks() - initial_time;
+    return clock.getElapsedTime().asMilliseconds();
+  //return SDL_GetTicks() - initial_time;
 }
 
 /**
@@ -141,7 +145,8 @@ uint32_t System::get_real_time() {
  * \param duration duration of the sleep in milliseconds
  */
 void System::sleep(uint32_t duration) {
-  SDL_Delay(duration);
+    sf::sleep(sf::milliseconds(duration));
+  //SDL_Delay(duration);
 }
 
 }
