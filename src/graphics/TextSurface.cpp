@@ -23,6 +23,7 @@
 #include "solarus/graphics/Surface.h"
 #include "solarus/graphics/TextSurface.h"
 #include "solarus/graphics/Transition.h"
+#include "solarus/graphics/RenderTexture.h"
 #include "solarus/graphics/Video.h"
 #include "solarus/lua/LuaContext.h"
 #include "solarus/lua/LuaTools.h"
@@ -501,14 +502,11 @@ void TextSurface::rebuild_bitmap() {
 void TextSurface::rebuild_ttf() {
 
   // create the text surface
-
-  SDL_Surface* internal_surface = nullptr;
-  TTF_Font& internal_font = FontResource::get_outline_font(font_id, font_size);
-  SDL_Color internal_color;
-  text_color.get_components(
+  sf::Font& internal_font = FontResource::get_outline_font(font_id, font_size);
+  /*text_color.get_components(
       internal_color.r, internal_color.g, internal_color.b, internal_color.a);
-
-  switch (rendering_mode) {
+*/
+  /*switch (rendering_mode) {
 
   case RenderingMode::SOLID:
     internal_surface = TTF_RenderUTF8_Solid(&internal_font, text.c_str(), internal_color);
@@ -517,14 +515,17 @@ void TextSurface::rebuild_ttf() {
   case RenderingMode::ANTIALIASING:
     internal_surface = TTF_RenderUTF8_Blended(&internal_font, text.c_str(), internal_color);
     break;
-  }
+  }*/
 
-  Debug::check_assertion(internal_surface != nullptr,
+  sf_text.setColor(text_color);
+  sf_text.setString(text);
+
+  /*Debug::check_assertion(internal_surface != nullptr,
       std::string("Cannot create the text surface for string '") + text + "': "
       + SDL_GetError()
-  );
+  );*/
 
-  surface = std::make_shared<Surface>(internal_surface);
+  surface.reset();
 }
 
 /**

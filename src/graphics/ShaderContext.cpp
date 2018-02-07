@@ -15,10 +15,10 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "solarus/core/Logger.h"
-#include "solarus/graphics/GlArbShader.h"
-#include "solarus/graphics/GlShader.h"
 #include "solarus/graphics/ShaderContext.h"
 #include "solarus/graphics/Video.h"
+
+#include <SFML/OpenGL.hpp>
 
 namespace Solarus {
 
@@ -50,40 +50,15 @@ bool ShaderContext::initialize() {
   Logger::info(std::string("OpenGL renderer: ") + opengl_renderer);
   Logger::info(std::string("OpenGL shading language: ") + shading_language_version);
 
-  SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
-  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-  if (!(gl_context = SDL_GL_CreateContext(Video::get_window()))) {
-    Debug::warning("Unable to create OpenGL context : " + std::string(SDL_GetError()));
-    return false;
-  }
-
   // Setting some parameters
   glEnable(GL_DEPTH_TEST); // The type of depth test to do.
   glDepthFunc(GL_LESS); // Enables depth testing.
-
-  // Use late swap tearing, or try to use the classic swap interval (aka VSync) if not supported.
-  if (SDL_GL_SetSwapInterval(-1) == -1) {
-    SDL_GL_SetSwapInterval(1);
-  }
-
-  // Try to initialize a gl shader system, in order from the earlier to the older.
-  is_universal_shader_supported = GlShader::initialize();
-  if (is_universal_shader_supported) {
-    return true;
-  }
-
-  return GlArbShader::initialize();
 }
 
 /**
  * \brief Free shader-related context.
  */
 void ShaderContext::quit() {
-
-  if (gl_context) {
-    SDL_GL_DeleteContext(gl_context);
-  }
 }
 
 /**
@@ -108,17 +83,7 @@ const std::string& ShaderContext::get_shading_language_version() {
  * \return The created shader.
  */
 ShaderPtr ShaderContext::create_shader(const std::string& shader_id) {
-
-  ShaderPtr shader = nullptr;
-
-  if (is_universal_shader_supported) {
-    shader = std::make_shared<GlShader>(shader_id);
-  }
-  else {
-    shader = std::make_shared<GlArbShader>(shader_id);
-  }
-
-  return shader;
+    return std::make_shared<Shader>(shader_id);
 }
 
 }

@@ -18,6 +18,8 @@
 #define SOLARUS_COLOR_H
 
 #include "solarus/core/Common.h"
+#include <SFML/Graphics/Color.hpp>
+
 #include <cstdint>
 
 namespace Solarus {
@@ -38,6 +40,7 @@ class Color {
     void set_alpha(uint8_t alpha);
     void get_components(uint8_t& r, uint8_t& g, uint8_t& b, uint8_t& a) const;
     void set_components(int r, int g, int b, int a = 255);
+    operator sf::Color() const;
 
     // Some predefined colors.
     static const Color transparent;
@@ -49,7 +52,6 @@ class Color {
     static const Color yellow;
     static const Color magenta;
     static const Color cyan;
-
   private:
 
     friend constexpr bool operator==(const Color& lhs, const Color& rhs);

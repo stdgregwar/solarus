@@ -20,7 +20,10 @@
 #include "solarus/core/Common.h"
 #include "solarus/core/Point.h"
 #include "solarus/core/Size.h"
+
 #include <SDL_rect.h>
+#include <SFML/Graphics/Rect.hpp>
+
 #include <iosfwd>
 
 namespace Solarus {
@@ -97,6 +100,8 @@ class Rectangle {
     Rectangle& operator|=(const Rectangle& other);
     Rectangle& operator&=(const Rectangle& other);
 
+    operator sf::IntRect()const;
+    operator sf::FloatRect()const;
   private:
 
     SDL_Rect* get_internal_rect();

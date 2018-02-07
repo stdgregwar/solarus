@@ -29,11 +29,14 @@
 #include "solarus/graphics/ShaderContext.h"
 #include "solarus/graphics/SoftwareVideoMode.h"
 #include "solarus/graphics/Surface.h"
+#include "solarus/graphics/RenderTexture.h"
 #include "solarus/graphics/Video.h"
 #include <memory>
 #include <sstream>
 #include <utility>
 #include <SDL_render.h>
+
+#include <SFML/Graphics/Sprite.hpp>
 
 namespace Solarus {
 
@@ -44,10 +47,12 @@ namespace {
  */
 struct VideoContext {
 
-  SDL_Window* main_window = nullptr;        /**< The window. */
-  SDL_Renderer* main_renderer = nullptr;    /**< The screen renderer. */
-  SDL_PixelFormat* pixel_format = nullptr;  /**< The pixel color format to use. */
+  //SDL_Window* main_window = nullptr;        /**< The window. */
+  sf::RenderWindow main_window;
+  //SDL_Renderer* main_renderer = nullptr;    /**< The screen renderer. */
+  //SDL_PixelFormat* pixel_format = nullptr;  /**< The pixel color format to use. */
   std::string rendering_driver_name;        /**< The name of the rendering driver. */
+  std::string window_title;
   bool disable_window = false;              /**< Indicates that no window is displayed (used for unit tests). */
   bool fullscreen_window = false;           /**< True if the window is in fullscreen. */
   bool visible_cursor = true;               /**< True if the mouse cursor is visible. */
@@ -65,7 +70,9 @@ struct VideoContext {
 
   // Shaders.
   bool rendertarget_supported = false;      /**< True if rendering on texture is supported. */
-  SDL_Texture* render_target = nullptr;     /**< The render texture used. */
+  //SDL_Texture* render_target = nullptr;     /**< The render texture used. */
+  sf::RenderTexture render_target;
+  sf::Sprite final_sprite;
   bool shaders_enabled = false;             /**< True if shaded modes support is enabled. */
   ShaderPtr current_shader = nullptr;       /**< The shader currently used or nullptr. */
 
@@ -88,27 +95,38 @@ VideoContext context;
  */
 void create_window() {
 
-  Debug::check_assertion(context.main_window == nullptr, "Window already exists");
+  Debug::check_assertion(!context.main_window.isOpen(), "Window already exists");
 
   // Set OpenGL as the default renderer driver when available, to avoid using Direct3d.
-  SDL_SetHintWithPriority(SDL_HINT_RENDER_DRIVER, "opengl", SDL_HINT_DEFAULT);
+  //SDL_SetHintWithPriority(SDL_HINT_RENDER_DRIVER, "opengl", SDL_HINT_DEFAULT);
 
   // Set the default OpenGL built-in shader (nearest).
-  SDL_SetHint(SDL_HINT_RENDER_OPENGL_SHADERS, "0");
+  //SDL_SetHint(SDL_HINT_RENDER_OPENGL_SHADERS, "0");
 
   std::string title = std::string("Solarus ") + SOLARUS_VERSION;
-  context.main_window = SDL_CreateWindow(
+  /*context.main_window = SDL_CreateWindow(
       title.c_str(),
       SDL_WINDOWPOS_CENTERED,
       SDL_WINDOWPOS_CENTERED,
       context.wanted_quest_size.width,
       context.wanted_quest_size.height,
       SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL
-  );
-  Debug::check_assertion(context.main_window != nullptr,
-      std::string("Cannot create the window: ") + SDL_GetError());
+  );*/
 
-  context.main_renderer = SDL_CreateRenderer(
+  context.window_title = title;
+  context.main_window.create(
+              sf::VideoMode(context.wanted_quest_size.width,
+                            context.wanted_quest_size.height),
+              title,
+              sf::Style::Resize|sf::Style::Default //TODO add context settings
+              );
+
+  context.main_window.setVisible(false);
+
+  Debug::check_assertion(context.main_window.isOpen(),
+      std::string("Cannot create the window: "));
+
+  /*context.main_renderer = SDL_CreateRenderer(
         context.main_window,
         -1,
         SDL_RENDERER_ACCELERATED
@@ -145,7 +163,12 @@ void create_window() {
 
   // Decide whether we enable shaders.
   context.shaders_enabled = context.rendertarget_supported &&
-      ShaderContext::initialize();
+      ShaderContext::initialize();*/
+  /*int width = context.normal_quest_size.width;
+  int height = context.normal_quest_size.height;
+  if(context.render_target.create(width,height)) {
+      Debug::error("Cannot create main render texture");
+  }*/
 }
 
 /**
@@ -204,11 +227,13 @@ void initialize(const Arguments& args) {
   Debug::check_assertion(!is_initialized(), "Video system already initialized");
 
   // Show the SDL version.
-  SDL_version sdl_version;
-  SDL_GetVersion(&sdl_version);
+  //SDL_version sdl_version;
+  /*SDL_GetVersion(&sdl_version);
   std::ostringstream oss;
   oss << "SDL: " << static_cast<int>(sdl_version.major) << "." << static_cast<int>(sdl_version.minor) << "." << static_cast<int>(sdl_version.patch);
-  Logger::info(oss.str());
+  Logger::info(oss.str());*/
+
+
 
   // Check the -no-video and the -quest-size options.
   const std::string& quest_size_string = args.get_argument_value("-quest-size");
@@ -228,7 +253,7 @@ void initialize(const Arguments& args) {
   if (context.disable_window) {
     // Create a pixel format anyway to make surface and color operations work,
     // even though nothing will ever be rendered.
-    context.pixel_format = SDL_AllocFormat(SDL_PIXELFORMAT_ABGR8888);
+    //context.pixel_format = SDL_AllocFormat(SDL_PIXELFORMAT_ABGR8888);
   }
   else {
     create_window();
@@ -246,14 +271,14 @@ void quit() {
 
   ShaderContext::quit();
 
-  if (is_fullscreen()) {
+  /*if (is_fullscreen()) {
     // Get back on desktop before destroy the window.
     SDL_SetWindowFullscreen(context.main_window, 0);
-  }
+  }*/
 
   context.all_video_modes.clear();
 
-  if (context.pixel_format != nullptr) {
+  /*if (context.pixel_format != nullptr) {
     SDL_FreeFormat(context.pixel_format);
     context.pixel_format = nullptr;
   }
@@ -264,9 +289,11 @@ void quit() {
   if (context.main_window != nullptr) {
     SDL_DestroyWindow(context.main_window);
     context.main_window = nullptr;
-  }
+  }*/
 
-  context = VideoContext();
+  context.main_window.close(); //Close mainwindow
+
+  //context = VideoContext();
 }
 
 /**
@@ -281,7 +308,7 @@ bool is_initialized() {
  * \brief Returns the main window.
  * \return The main window, or nullptr if there is no window.
  */
-SDL_Window* get_window() {
+sf::RenderWindow &get_window() {
   return context.main_window;
 }
 
@@ -289,15 +316,15 @@ SDL_Window* get_window() {
  * \brief Returns the main renderer.
  * \return The main renderer, or nullptr if there is no window.
  */
-SDL_Renderer* get_renderer() {
+/*SDL_Renderer* get_renderer() {
   return context.main_renderer;
-}
+}*/
 
 /**
  * \brief Returns the render texture target, if any.
  * \return The render target, or nullptr.
  */
-SDL_Texture* get_render_target() {
+sf::RenderTarget &get_render_target() {
     return context.render_target;
   }
 
@@ -305,9 +332,9 @@ SDL_Texture* get_render_target() {
  * \brief Returns the pixel format to use.
  * \return The pixel format to use.
  */
-SDL_PixelFormat* get_pixel_format() {
+/*SDL_PixelFormat* get_pixel_format() {
   return context.pixel_format;
-}
+}*/
 
 /**
  * \brief Get the default rendering driver for the current platform.
@@ -322,8 +349,27 @@ const std::string& get_rendering_driver_name() {
  * \brief Show the window.
  */
 void show_window() {
+  //SDL_ShowWindow(context.main_window);
+  context.main_window.setVisible(true);
+}
 
-  SDL_ShowWindow(context.main_window);
+/**
+ * @brief get a sfml view to do letterboxing
+ * @param view
+ * @param windowWidth
+ * @param windowHeight
+ * @return
+ */
+sf::View letter_box_view(int windowWidth, int windowHeight, int texture_width, int texture_height) {
+
+    // Compares the aspect ratio of the window to the aspect ratio of the view,
+    // and sets the view's viewport accordingly in order to archieve a letterbox effect.
+    // A new view (with a new viewport set) is returned
+    sf::View view;
+    view.setSize(texture_width,texture_height);
+    view.setCenter(texture_width/2,texture_height/2);
+
+    return view;
 }
 
 /**
@@ -336,18 +382,18 @@ void render(const SurfacePtr& quest_surface) {
     return;
   }
 
-  Debug::check_assertion(context.video_mode != nullptr,
-      "Missing video mode");
+  /*Debug::check_assertion(context.video_mode != nullptr,
+      "Missing video mode");*/
 
   // See if there is a filter to apply.
-  SurfacePtr surface_to_render = quest_surface;
-  const SoftwarePixelFilter* software_filter = context.video_mode->get_software_filter();
-  if (software_filter != nullptr) {
+  //SurfacePtr surface_to_render = quest_surface;
+  //const SoftwarePixelFilter* software_filter = context.video_mode->get_software_filter();
+  /*if (software_filter != nullptr) {
     Debug::check_assertion(context.scaled_surface != nullptr,
         "Missing destination surface for scaling");
     quest_surface->apply_pixel_filter(*software_filter, *context.scaled_surface);
     surface_to_render = context.scaled_surface;
-  }
+  }*/
 
   if (context.current_shader != nullptr) {
     // OpenGL rendering with the current shader.
@@ -355,13 +401,18 @@ void render(const SurfacePtr& quest_surface) {
   }
   else {
     // SDL rendering.
-    SDL_SetRenderDrawColor(context.main_renderer, 0, 0, 0, 255);
+    /*SDL_SetRenderDrawColor(context.main_renderer, 0, 0, 0, 255);
     SDL_RenderSetClipRect(context.main_renderer, nullptr);
     SDL_RenderClear(context.main_renderer);
     surface_to_render->render(*context.render_target);
     SDL_RenderCopy(context.main_renderer, context.render_target, nullptr, nullptr);
-    SDL_RenderPresent(context.main_renderer);
+    SDL_RenderPresent(context.main_renderer);*/
+      //SFML rendering
+    RenderTexture& rt = quest_surface->request_render();
+
+    context.main_window.draw(sf::Sprite(rt.get_texture()));
   }
+  context.main_window.display();
 }
 
 /**
@@ -469,17 +520,23 @@ void set_quest_size_range(
   }
 
   // Initialize the render target.
-  context.render_target = SDL_CreateTexture(
+  /*context.render_target = SDL_CreateTexture(
       context.main_renderer,
       context.pixel_format->format,
       SDL_TEXTUREACCESS_TARGET,
       context.quest_size.width,
       context.quest_size.height
   );
-  SDL_SetTextureBlendMode(context.render_target, SDL_BLENDMODE_BLEND);
+  SDL_SetTextureBlendMode(context.render_target, SDL_BLENDMODE_BLEND);*/
 
+  context.render_target.create(context.quest_size.width,context.quest_size.height);
+  context.final_sprite.setTexture(context.render_target.getTexture());
+  context.main_window.setView(letter_box_view(context.main_window.getSize().x,
+                                              context.main_window.getSize().y,
+                                              context.render_target.getSize().x,
+                                              context.render_target.getSize().y));
   // We know the quest size: we can initialize legacy video modes.
-  initialize_software_video_modes();
+  //initialize_software_video_modes();
 }
 
 /**
@@ -497,13 +554,13 @@ bool is_fullscreen() {
  */
 void set_fullscreen(bool fullscreen) {
 
-  if (context.main_window == nullptr) {
+  if (!context.main_window.isOpen()) {
     return;
   }
 
   Uint32 fullscreen_flag;
   if (fullscreen) {
-    fullscreen_flag = SDL_WINDOW_FULLSCREEN_DESKTOP;
+    fullscreen_flag = sf::Style::Fullscreen;
     context.window_size = get_window_size();  // Store the window size before fullscreen.
   }
   else {
@@ -511,7 +568,12 @@ void set_fullscreen(bool fullscreen) {
   }
   context.fullscreen_window = fullscreen;
 
-  SDL_SetWindowFullscreen(context.main_window, fullscreen_flag);
+  context.main_window.create(
+              sf::VideoMode(context.wanted_quest_size.width,
+                            context.wanted_quest_size.height),
+              context.window_title,
+              sf::Style::Resize|sf::Style::Default|fullscreen_flag //TODO add context settings
+              );
 
   Logger::info(std::string("Fullscreen: ") + (fullscreen ? "yes" : "no"));
 }
@@ -564,8 +626,7 @@ void set_shader(const ShaderPtr& shader) {
  * \return The window title.
  */
 std::string get_window_title() {
-
-  return SDL_GetWindowTitle(context.main_window);
+  return context.window_title;
 }
 
 /**
@@ -573,8 +634,9 @@ std::string get_window_title() {
  * \param window_title The window title to set.
  */
 void set_window_title(const std::string& window_title) {
-
-  SDL_SetWindowTitle(context.main_window, window_title.c_str());
+  //SDL_SetWindowTitle(context.main_window, window_title.c_str());
+  context.window_title =  window_title;
+  context.main_window.setTitle(window_title);
 }
 
 /**
@@ -652,7 +714,7 @@ void switch_video_mode() {
  */
 bool set_video_mode(const SoftwareVideoMode& mode) {
 
-  bool mode_changed = context.video_mode == nullptr
+  /*bool mode_changed = context.video_mode == nullptr
       || mode.get_name() != context.video_mode->get_name();
 
   if (!is_mode_supported(mode)) {
@@ -684,7 +746,7 @@ bool set_video_mode(const SoftwareVideoMode& mode) {
     }
   }
 
-  return true;
+  return true;*/
 }
 
 /**
@@ -742,19 +804,17 @@ const SoftwareVideoMode* get_video_mode_by_name(
  */
 Size get_window_size() {
 
-  Debug::check_assertion(context.main_window != nullptr, "No window");
+  Debug::check_assertion(context.main_window.isOpen(), "No window");
 
   if (is_fullscreen()) {
     // Returns the memorized window size.
     return context.window_size;
   }
 
-  // Returns the current window size.
-  int width = 0;
-  int height = 0;
-  SDL_GetWindowSize(context.main_window, &width, &height);
+  // Returns the current window size
+  sf::Vector2u size = context.main_window.getSize();
 
-  return { width, height };
+  return {size.x, size.y};
 }
 
 /**
@@ -769,7 +829,7 @@ Size get_window_size() {
  */
 void set_window_size(const Size& size) {
 
-  Debug::check_assertion(context.main_window != nullptr, "No window");
+  Debug::check_assertion(context.main_window.isOpen(), "No window");
   Debug::check_assertion(
       size.width > 0 && size.height > 0,
       "Wrong window size"
@@ -780,20 +840,10 @@ void set_window_size(const Size& size) {
     context.window_size = size;
   }
   else {
-    int width = 0;
-    int height = 0;
-    SDL_GetWindowSize(context.main_window, &width, &height);
+    int width = context.window_size.width;
+    int height = context.window_size.height;
     if (width != size.width || height != size.height) {
-      SDL_SetWindowSize(
-          context.main_window,
-          size.width,
-          size.height
-      );
-      SDL_SetWindowPosition(
-          context.main_window,
-          SDL_WINDOWPOS_CENTERED,
-          SDL_WINDOWPOS_CENTERED
-      );
+        context.main_window.setSize({size.width,size.height});
     }
   }
 }
@@ -819,13 +869,12 @@ void reset_window_size() {
  */
 Size get_output_size() {
 
-  Debug::check_assertion(context.main_window != nullptr, "No window");
+  Debug::check_assertion(context.main_window.isOpen(), "No window");
 
-  int width = 0;
-  int height = 0;
-  SDL_GetWindowSize(context.main_window, &width, &height);
 
-  return { width, height };
+  sf::Vector2u size = context.main_window.getSize();
+
+  return { size.x, size.y };
 }
 
 /**
@@ -840,11 +889,11 @@ Size get_output_size() {
  */
 Size get_output_size_no_bars() {
 
-  Debug::check_assertion(context.main_renderer != nullptr, "No window");
+  Debug::check_assertion(context.main_window.isOpen(), "No window");
 
-  float scale_x = 0;
-  float scale_y = 0;
-  SDL_RenderGetScale(context.main_renderer, &scale_x, &scale_y);
+  sf::View v = context.main_window.getView();
+  float scale_x = context.main_window.getSize().x / v.getSize().x;
+  float scale_y = context.main_window.getSize().y / v.getSize().y;
 
   Rectangle viewport = get_viewport();
   return {
@@ -862,12 +911,8 @@ Size get_output_size_no_bars() {
  * \return The viewport, in renderer logical coordinates (before window scaling).
  */
 Rectangle get_viewport() {
-
-  SDL_Rect viewport;
-
-  SDL_RenderGetViewport(get_renderer(), &viewport);
-
-  return Rectangle(viewport.x, viewport.y, viewport.w, viewport.h);
+    sf::Vector2u size = context.render_target.getSize();
+  return Rectangle(0,0, size.x, size.y);
 }
 
 /**
@@ -879,10 +924,9 @@ Rectangle get_viewport() {
 Point window_to_quest_coordinates(const Point& window_xy) {
 
   Rectangle viewport = get_viewport();
-
-  float scale_x = 0.0;
-  float scale_y = 0.0;
-  SDL_RenderGetScale(get_renderer(), &scale_x, &scale_y);
+  sf::View v = context.main_window.getView();
+  float scale_x = context.main_window.getSize().x / v.getSize().x;
+  float scale_y = context.main_window.getSize().y / v.getSize().y;
 
   const double x_position = window_xy.x - viewport.get_x() * scale_x;
   const double y_position = window_xy.y - viewport.get_y() * scale_y;
@@ -912,7 +956,9 @@ bool renderer_to_quest_coordinates(
 
   int renderer_width = 0;
   int renderer_height = 0;
-  SDL_RenderGetLogicalSize(get_renderer(), &renderer_width, &renderer_height);
+  sf::Vector2u rsize = context.render_target.getSize();
+  renderer_width =rsize.x;
+  renderer_height=rsize.y;
 
   const double quest_width = context.quest_size.width;
   const double quest_height = context.quest_size.height;

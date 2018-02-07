@@ -20,6 +20,7 @@
 #include "solarus/graphics/Video.h"
 #include "solarus/lua/LuaContext.h"
 #include "solarus/lua/LuaTools.h"
+#include "solarus/graphics/Surface.h"
 
 namespace Solarus {
 
@@ -108,8 +109,8 @@ void Shader::set_data(const ShaderData& data) {
  * \param uniform_name Name of the uniform to set.
  * \param value The boolean value to set.
  */
-void Shader::set_uniform_1b(const std::string&, bool) {
-  // TODO make pure virtual
+void Shader::set_uniform_1b(const std::string& n, bool b) {
+  sf_shader.setUniform(n,b);
 }
 
 /**
@@ -121,8 +122,9 @@ void Shader::set_uniform_1b(const std::string&, bool) {
  * \param uniform_name Name of the uniform to set.
  * \param value The integer value to set.
  */
-void Shader::set_uniform_1i(const std::string&, int) {
+void Shader::set_uniform_1i(const std::string& n, int i) {
   // TODO make pure virtual
+    sf_shader.setUniform(n,i);
 }
 
 /**
@@ -134,8 +136,9 @@ void Shader::set_uniform_1i(const std::string&, int) {
  * \param uniform_name Name of the uniform to set.
  * \param value The float value to set.
  */
-void Shader::set_uniform_1f(const std::string&, float) {
+void Shader::set_uniform_1f(const std::string& n, float f) {
   // TODO make pure virtual
+    sf_shader.setUniform(n,f);
 }
 
 /**
@@ -148,8 +151,9 @@ void Shader::set_uniform_1f(const std::string&, float) {
  * \param value_1 The first float value to set.
  * \param value_2 The second float value to set.
  */
-void Shader::set_uniform_2f(const std::string&, float, float) {
+void Shader::set_uniform_2f(const std::string& n, float f1, float f2) {
   // TODO make pure virtual
+    sf_shader.setUniform(n,sf::Glsl::Vec2(f1,f2));
 }
 
 /**
@@ -163,8 +167,9 @@ void Shader::set_uniform_2f(const std::string&, float, float) {
  * \param value_2 The third float value to set.
  * \param value_3 The second float value to set.
  */
-void Shader::set_uniform_3f(const std::string&, float, float, float) {
+void Shader::set_uniform_3f(const std::string& n , float f1, float f2, float f3) {
   // TODO make pure virtual
+    sf_shader.setUniform(n,sf::Glsl::Vec3(f1,f2,f3));
 }
 
 /**
@@ -179,8 +184,9 @@ void Shader::set_uniform_3f(const std::string&, float, float, float) {
  * \param value_3 The third float value to set.
  * \param value_4 The fourth float value to set.
  */
-void Shader::set_uniform_4f(const std::string&, float, float, float, float) {
+void Shader::set_uniform_4f(const std::string& n, float x, float y, float z, float w) {
   // TODO make pure virtual
+    sf_shader.setUniform(n,sf::Glsl::Vec4(x,y,z,w));
 }
 
 /**
@@ -193,8 +199,10 @@ void Shader::set_uniform_4f(const std::string&, float, float, float, float) {
  * \param value The 2D texture value value to set.
  * \return \c true in case of success.
  */
-bool Shader::set_uniform_texture(const std::string&, const SurfacePtr&) {
+bool Shader::set_uniform_texture(const std::string& n, const SurfacePtr& surface) {
   // TODO make pure virtual
+    auto texture = surface->internal_surface->get_texture();
+    sf_shader.setUniform(n,texture);
   return false;
 }
 
@@ -206,6 +214,7 @@ bool Shader::set_uniform_texture(const std::string&, const SurfacePtr&) {
  */
 void Shader::render(const SurfacePtr& /* quest_surface */) {
   // TODO make pure virtual
+    //TODO rewrite to stay in sfml
 }
 
 
@@ -217,6 +226,13 @@ void Shader::render(const SurfacePtr& /* quest_surface */) {
  */
 void Shader::load() {
   // TODO make pure virtual
+    const std::string shader_file_name =
+      "shaders/" + get_id() + ".dat";
+    ShaderData data;
+    if(!data.import_from_quest_file(shader_file_name)) {
+        return;
+    }
+    sf_shader.loadFromMemory(data.get_vertex_source(),data.get_fragment_source());
 }
 
 /**

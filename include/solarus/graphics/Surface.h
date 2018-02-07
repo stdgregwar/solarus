@@ -21,8 +21,14 @@
 #include "solarus/core/PixelBits.h"
 #include "solarus/graphics/SurfacePtr.h"
 #include "solarus/graphics/Drawable.h"
+#include "solarus/graphics/SurfaceImpl.h"
+
 #include <SDL.h>
 #include <SDL_image.h>
+
+#include <SFML/Graphics/RenderTexture.hpp>
+#include <SFML/Graphics/Texture.hpp>
+
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -44,14 +50,11 @@ class Surface;
  */
 class Surface: public Drawable {
 
-  public:
+    friend class Shader;
 
-    struct SDL_Surface_Deleter {
-        void operator()(SDL_Surface* sdl_surface) const {
-          SDL_FreeSurface(sdl_surface);
-        }
-    };
-    using SDL_Surface_UniquePtr = std::unique_ptr<SDL_Surface, SDL_Surface_Deleter>;
+  public:
+    //using SDL_Surface_UniquePtr = std::unique_ptr<SDL_Surface, SDL_Surface_Deleter>;
+    using SurfaceImpl_UniquePtr = std::unique_ptr<SurfaceImpl>;
 
     /**
      * \brief The base directory to use when opening image files.
@@ -63,7 +66,7 @@ class Surface: public Drawable {
     };
 
     Surface(int width, int height);
-    explicit Surface(SDL_Surface* internal_surface);
+    explicit Surface(SurfaceImpl* impl);
     ~Surface();
 
     // Surfaces should only created with std::make_shared.
@@ -87,13 +90,13 @@ class Surface: public Drawable {
     uint8_t get_opacity() const;
     void set_opacity(uint8_t opacity);
 
-    SDL_Surface* get_internal_surface();
+    SurfaceImpl* get_internal_surface();
+    RenderTexture &request_render();
+
     bool is_pixel_transparent(int index) const;
 
     std::string get_pixels() const;
     void set_pixels(const std::string& buffer);
-
-    void apply_pixel_filter(const SoftwarePixelFilter& pixel_filter, Surface& dst_surface);
 
     // Implementation from Drawable.
     virtual void raw_draw(
@@ -108,25 +111,22 @@ class Surface: public Drawable {
     virtual void draw_transition(Transition& transition) override;
     virtual Surface& get_transition_surface() override;
 
-    void render(SDL_Texture& render_target);
+    void render(sf::RenderTarget &render_target);
 
     const std::string& get_lua_type_name() const override;
 
   private:
-
+    uint8_t opacity;
     uint32_t get_pixel(int index) const;
     uint32_t get_color_value(const Color& color) const;
     SDL_BlendMode get_sdl_blend_mode() const;
 
-    static SDL_Surface* get_surface_from_file(
+    static SurfaceImpl* get_surface_from_file(
         const std::string& file_name,
         ImageDirectory base_directory);
 
-    SDL_Surface_UniquePtr
+    SurfaceImpl_UniquePtr
         internal_surface;                 /**< The SDL_Surface encapsulated. */
-    SDL_Surface_UniquePtr
-        alpha_color_surface;              /**< Intermediate surface needed to fill with non-opaque colors. */
-    uint8_t opacity;                      /**< Opacity (0: transparent, 255: opaque). */
 };
 
 }

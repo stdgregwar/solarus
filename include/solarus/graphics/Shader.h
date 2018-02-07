@@ -26,6 +26,8 @@
 #include "solarus/lua/LuaTools.h"
 #include <string>
 
+#include <SFML/Graphics/Shader.hpp>
+
 #define SOLARUS_HAVE_OPENGL // Temporary define. To determine at configure part
 
 namespace Solarus {
@@ -46,8 +48,7 @@ class Shader : public ExportableToLua {
     const std::string& get_id() const;
     const ShaderData& get_data() const;
 
-    virtual void set_uniform_1b(
-        const std::string& uniform_name, bool value);  // TODO make pure virtual
+    virtual void set_uniform_1b(const std::string& uniform_name, bool b);  // TODO make pure virtual
     virtual void set_uniform_1i(
         const std::string& uniform_name, int value);
     virtual void set_uniform_1f(
@@ -63,7 +64,6 @@ class Shader : public ExportableToLua {
     virtual void render(const SurfacePtr& quest_surface);  // TODO make pure virtual
 
     const std::string& get_lua_type_name() const override;
-
   protected:
 
     void set_valid(bool valid);
@@ -72,7 +72,7 @@ class Shader : public ExportableToLua {
     virtual void load();  // TODO make pure virtual
 
   private:
-
+    sf::Shader sf_shader;
     const std::string shader_id;  /**< The id of the shader (filename without extension). */
     ShaderData data;              /**< The loaded shader data file. */
     bool valid;                   /**< \c true if the compilation succedeed. */

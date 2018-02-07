@@ -105,8 +105,8 @@ void FontResource::load_fonts() {
       // It's an outline font.
       font.buffer = QuestFiles::data_file_read(font.file_name);
       font.bitmap_font = nullptr;
+      font.font.loadFromMemory(font.buffer.data(),font.buffer.size());
     }
-
     fonts.emplace(font_id, std::move(font));
   }
 
@@ -185,7 +185,7 @@ SurfacePtr FontResource::get_bitmap_font(const std::string& font_id) {
  * \param size Size to use.
  * \return The font.
  */
-TTF_Font& FontResource::get_outline_font(const std::string& font_id, int size) {
+sf::Font &FontResource::get_outline_font(const std::string& font_id, int size) {
 
   if (!fonts_loaded) {
     load_fonts();
@@ -196,15 +196,11 @@ TTF_Font& FontResource::get_outline_font(const std::string& font_id, int size) {
   FontFile& font = kvp->second;
   Debug::check_assertion(font.bitmap_font == nullptr, std::string("This is not an outline font: '") + font_id + "'");
 
-  std::map<int, OutlineFontReader>& outline_fonts = kvp->second.outline_fonts;
+  return kvp->second.font;
 
-  const auto& kvp2 = outline_fonts.find(size);
-  if (kvp2 != outline_fonts.end()) {
-    return *kvp2->second.outline_font;
-  }
 
   // First time we want this font with this particular size.
-  SDL_RWops_UniquePtr rw = SDL_RWops_UniquePtr(SDL_RWFromMem(
+  /*SDL_RWops_UniquePtr rw = SDL_RWops_UniquePtr(SDL_RWFromMem(
       const_cast<char*>(font.buffer.data()),
       (int) font.buffer.size()
   ));
@@ -215,7 +211,7 @@ TTF_Font& FontResource::get_outline_font(const std::string& font_id, int size) {
   );
   OutlineFontReader reader = { std::move(rw), std::move(outline_font) };
   outline_fonts.emplace(size, std::move(reader));
-  return *outline_fonts.at(size).outline_font;
+  return *outline_fonts.at(size).outline_font;*/
 }
 
 }

@@ -24,6 +24,8 @@
 #include <string>
 #include <SDL_ttf.h>
 
+#include <SFML/Graphics/Font.hpp>
+
 namespace Solarus {
 
 /**
@@ -40,7 +42,7 @@ class FontResource {
     static bool exists(const std::string& font_id);
     static bool is_bitmap_font(const std::string& font_id);
     static SurfacePtr get_bitmap_font(const std::string& font_id);
-    static TTF_Font& get_outline_font(const std::string& font_id, int size);
+    static sf::Font& get_outline_font(const std::string& font_id, int size);
 
   private:
 
@@ -74,8 +76,7 @@ class FontResource {
       std::string buffer;                             /**< The font file loaded into memory. */
 
       SurfacePtr bitmap_font;                         /**< The font bitmap. Only used for bitmap fonts. */
-      std::map<int, OutlineFontReader>
-          outline_fonts;                              /**< This font in any size it was loaded with.
+      sf::Font font;                            /**< This font in any size it was loaded with.
                                                        * Only used for outline fonts. */
     };
 

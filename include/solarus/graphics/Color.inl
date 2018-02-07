@@ -49,7 +49,7 @@ constexpr Color::Color(int r, int g, int b, int a):
  * \return The alpha component. 255 is opaque.
  */
 constexpr uint8_t Color::get_alpha() const {
-  return a;
+	return a;
 }
 
 /**
@@ -57,7 +57,7 @@ constexpr uint8_t Color::get_alpha() const {
  * \param alpha The alpha component. 255 is opaque.
  */
 inline void Color::set_alpha(uint8_t alpha) {
-  this->a = alpha;
+	this->a = alpha;
 }
 
 /**
@@ -70,10 +70,10 @@ inline void Color::set_alpha(uint8_t alpha) {
 inline void Color::get_components(
     uint8_t& r, uint8_t& g, uint8_t& b, uint8_t& a) const {
 
-  r = this->r;
-  g = this->g;
-  b = this->b;
-  a = this->a;
+	r = this->r;
+	g = this->g;
+	b = this->b;
+	a = this->a;
 }
 
 /**
@@ -85,11 +85,16 @@ inline void Color::get_components(
  */
 inline void Color::set_components(int r, int g, int b, int a) {
 
-  this->r = r;
-  this->g = g;
-  this->b = b;
-  this->a = a;
+	this->r = r;
+	this->g = g;
+	this->b = b;
+	this->a = a;
 }
+
+inline Color::operator sf::Color() const {
+	  return sf::Color(r,g,b,a);
+}
+
 
 /**
  * \brief Equality operator.
@@ -99,10 +104,10 @@ inline void Color::set_components(int r, int g, int b, int a) {
  */
 constexpr bool operator==(const Color& lhs, const Color& rhs) {
 
-  return lhs.r == rhs.r &&
-      lhs.g == rhs.g &&
-      lhs.b == rhs.b &&
-      lhs.a == rhs.a;
+	return lhs.r == rhs.r &&
+	    lhs.g == rhs.g &&
+	    lhs.b == rhs.b &&
+	    lhs.a == rhs.a;
 }
 
 /**
@@ -113,10 +118,10 @@ constexpr bool operator==(const Color& lhs, const Color& rhs) {
  */
 constexpr bool operator!=(const Color& lhs, const Color& rhs) {
 
-  return lhs.r != rhs.r ||
-      lhs.g != rhs.g ||
-      lhs.b != rhs.b ||
-      lhs.a != rhs.a;
+	return lhs.r != rhs.r ||
+	    lhs.g != rhs.g ||
+	    lhs.b != rhs.b ||
+	    lhs.a != rhs.a;
 }
 
 }

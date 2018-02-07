@@ -24,12 +24,15 @@
 #include <vector>
 #include <string>
 
-struct SDL_PixelFormat;
+#include <SFML/Graphics/RenderTarget.hpp>
+#include <SFML/Graphics/RenderWindow.hpp>
+
+/*struct SDL_PixelFormat;
 struct SDL_Renderer;
 struct SDL_Window;
 struct SDL_Renderer;
 struct SDL_Texture;
-struct SDL_PixelFormat;
+struct SDL_PixelFormat;*/
 
 namespace Solarus {
 
@@ -47,11 +50,11 @@ namespace Video {
     void quit();
     bool is_initialized();
 
-    SDL_Window* get_window();
-    SDL_Renderer* get_renderer();
+    sf::RenderWindow& get_window();
+    //SDL_Renderer* get_renderer();
 
-    SDL_Texture* get_render_target();
-    SDL_PixelFormat* get_pixel_format();
+    sf::RenderTarget& get_render_target();
+    //SDL_PixelFormat* get_pixel_format();
     const std::string& get_rendering_driver_name();
     void show_window();
 

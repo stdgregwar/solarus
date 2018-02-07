@@ -24,6 +24,7 @@
 #include <map>
 #include <string>
 #include <SDL_ttf.h>
+#include <SFML/Graphics/Text.hpp>
 
 namespace Solarus {
 
@@ -132,6 +133,7 @@ class TextSurface: public Drawable {
     int y;                                            /**< y coordinate of where the text is aligned */
 
     SurfacePtr surface;                               /**< the surface to draw */
+    sf::Text sf_text;
     Point text_position;                              /**< position of the top-left corner of the surface on the screen */
 
     std::string text;                                 /**< the string to draw (only one line) */
