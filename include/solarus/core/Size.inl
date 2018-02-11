@@ -37,6 +37,13 @@ constexpr Size::Size(int width, int height):
 }
 
 /**
+ * @brief convert size to vector2f
+ */
+inline Size::operator sf::Vector2f() const {
+    return {width,height};
+}
+
+/**
  * \brief Adds another size to this one.
  * \param other Another size.
  * \return The current size after modification.

@@ -20,6 +20,8 @@
 #include "solarus/core/Common.h"
 #include <iosfwd>
 
+#include <SFML/System/Vector2.hpp>
+
 namespace Solarus {
 
 /**
@@ -39,6 +41,7 @@ class Point {
 
     ////////////////////////////////////////////////////////////
     // Operators
+    operator sf::Vector2f() const;
 
     Point& operator+=(const Point& other);
     Point& operator-=(const Point& other);

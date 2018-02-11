@@ -432,10 +432,10 @@ void MainLoop::step() {
 void MainLoop::check_input() {
 
   // Check SDL events.
-  std::unique_ptr<InputEvent> event = InputEvent::get_event();
+  std::unique_ptr<InputEvent> event = InputEvent::get_event(Video::get_window());
   while (event != nullptr) {
     notify_input(*event);
-    event = InputEvent::get_event();
+    event = InputEvent::get_event(Video::get_window());
   }
 
   // Check Lua requests.

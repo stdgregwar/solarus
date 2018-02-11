@@ -21,6 +21,7 @@
 #include "solarus/graphics/Video.h"
 #include <SDL.h>
 #include <cstdlib>  // std::abs
+#include <codecvt>
 
 namespace Solarus {
 
@@ -31,11 +32,13 @@ const InputEvent::KeyboardKey InputEvent::directional_keys[] = {
     KeyboardKey::DOWN,
     KeyboardKey::NONE
 };
+
 bool InputEvent::initialized = false;
 bool InputEvent::joypad_enabled = false;
 SDL_Joystick* InputEvent::joystick = nullptr;
 bool InputEvent::repeat_keyboard = false;
-std::set<SDL_Keycode> InputEvent::keys_pressed;
+std::set<sf::Keyboard::Key> InputEvent::keys_pressed;
+std::queue<sf::Event> InputEvent::simulated_events;
 // Default the axis states to centered
 std::vector<int> InputEvent::joypad_axis_state;
 
@@ -191,10 +194,10 @@ void InputEvent::initialize() {
   initialized = true;
 
   // Initialize text events.
-  SDL_StartTextInput();
+  //SDL_StartTextInput();
 
   // Initialize the joypad.
-  set_joypad_enabled(true);
+  //set_joypad_enabled(true);
 }
 
 /**
@@ -227,7 +230,7 @@ bool InputEvent::is_initialized() {
  * \brief Creates a keyboard event.
  * \param event The internal event to encapsulate.
  */
-InputEvent::InputEvent(const SDL_Event& event):
+InputEvent::InputEvent(const sf::Event& event):
   internal_event(event) {
 
 }
@@ -240,19 +243,19 @@ InputEvent::InputEvent(const SDL_Event& event):
  * in the queue.
  * Returns nullptr if there is no more event in the queue.
  */
-std::unique_ptr<InputEvent> InputEvent::get_event() {
+std::unique_ptr<InputEvent> InputEvent::get_event(sf::Window& window) {
 
   InputEvent* result = nullptr;
-  SDL_Event internal_event;
-  if (SDL_PollEvent(&internal_event)) {
+  sf::Event internal_event;
+  if (window.pollEvent(internal_event)) {
 
     // If this is a joypad axis event
-    if (internal_event.type == SDL_JOYAXISMOTION) {
+    if (internal_event.type == sf::Event::JoystickMoved) {
       // Determine the current state of the axis
-      int axis = internal_event.jaxis.axis;
-      int value = internal_event.jaxis.value;
+      sf::Joystick::Axis axis = internal_event.joystickMove.axis;
+      int value = internal_event.joystickMove.position;
       int joystick_deadzone = 8000;
-      if (axis == 0) {  // X axis
+      if (axis == sf::Joystick::Axis::X) {  // X axis
         int x_dir = 0;
         if (value < -joystick_deadzone) {
           // Left of dead zone
@@ -264,7 +267,7 @@ std::unique_ptr<InputEvent> InputEvent::get_event() {
           x_dir = 0;
         }
         joypad_axis_state[axis] = x_dir;
-      } else if (axis == 1) {  // Y axis
+      } else if (axis == sf::Joystick::Axis::Y) {  // Y axis
         int y_dir = 0;
         if (value < -joystick_deadzone) {
           // Below dead zone
@@ -284,27 +287,35 @@ std::unique_ptr<InputEvent> InputEvent::get_event() {
     // (which is not recommended)
     // multiple SDL_KEYUP events are generated when a key remains pressed
     // (Qt/SDL conflict). This fixes most problems but not all of them.
-    else if (internal_event.type == SDL_KEYDOWN) {
-      SDL_Keycode key = internal_event.key.keysym.sym;
+    else if (internal_event.type == sf::Event::KeyPressed) {
+      sf::Keyboard::Key key = internal_event.key.code;
       if (!keys_pressed.insert(key).second) {
         // Already known as pressed: mark repeated.
-        internal_event.key.repeat = 1;
+        //internal_event.key.repeat = 1; //TODO check if SFML repeat event too
       }
     }
-    else if (internal_event.type == SDL_KEYUP) {
-      SDL_Keycode key = internal_event.key.keysym.sym;
+    else if (internal_event.type == sf::Event::KeyReleased) {
+      sf::Keyboard::Key key = internal_event.key.code;
       if (keys_pressed.erase(key) == 0) {
         // Already known as not pressed: mark repeated.
-        internal_event.key.repeat = 1;
+        //internal_event.key.repeat = 1;
       }
     }
 
     // Always return a Solarus event if an SDL event occurred, so that
     // multiple SDL events in the same frame are all treated.
     result = new InputEvent(internal_event);
+  } else if (!simulated_events.empty()){ //else take simulated events
+    internal_event = simulated_events.front();
+    simulated_events.pop();
+    result = new InputEvent(internal_event);
   }
 
   return std::unique_ptr<InputEvent>(result);
+}
+
+void InputEvent::push_event(const sf::Event& event) {
+    simulated_events.push(event);
 }
 
 // global information
@@ -581,7 +592,8 @@ bool InputEvent::get_global_finger_pressure(int finger_id, float& finger_pressur
  * \return \c false if this object represents no event.
  */
 bool InputEvent::is_valid() const {
-  return internal_event.type == SDL_LASTEVENT;
+  //return internal_event.type == SDL_LASTEVENT;
+    return true; //TODO check if it is the case
 }
 
 /**
@@ -589,9 +601,8 @@ bool InputEvent::is_valid() const {
  * \return true if this is a keyboard event
  */
 bool InputEvent::is_keyboard_event() const {
-
-  return (internal_event.type == SDL_KEYDOWN || internal_event.type == SDL_KEYUP)
-    && (!internal_event.key.repeat || repeat_keyboard);
+  return (internal_event.type == sf::Event::KeyPressed || internal_event.type == sf::Event::KeyReleased);
+    //&& (!internal_event.key.repeat || repeat_keyboard);
 }
 
 /**
@@ -600,10 +611,10 @@ bool InputEvent::is_keyboard_event() const {
  */
 bool InputEvent::is_joypad_event() const {
 
-  return internal_event.type == SDL_JOYAXISMOTION
-    || internal_event.type == SDL_JOYHATMOTION
-    || internal_event.type == SDL_JOYBUTTONDOWN
-    || internal_event.type == SDL_JOYBUTTONUP;
+  return internal_event.type == sf::Event::JoystickButtonPressed
+    || internal_event.type == sf::Event::JoystickButtonReleased
+    || internal_event.type == sf::Event::JoystickMoved
+    || internal_event.type == sf::Event::JoystickDisconnected;
 }
 
 /**
@@ -612,21 +623,20 @@ bool InputEvent::is_joypad_event() const {
  */
 bool InputEvent::is_mouse_event() const {
 
-  return internal_event.type == SDL_MOUSEMOTION
-    || internal_event.type == SDL_MOUSEBUTTONDOWN
-    || internal_event.type == SDL_MOUSEBUTTONUP
-    || internal_event.type == SDL_MOUSEWHEEL;
+  return internal_event.type == sf::Event::MouseButtonPressed
+    || internal_event.type == sf::Event::MouseButtonReleased
+    || internal_event.type == sf::Event::MouseWheelMoved
+    || internal_event.type == sf::Event::MouseMoved;
 }
-
 /**
  * \brief Returns whether this event is a finger event.
  * \return true if this is a finger event.
  */
 bool InputEvent::is_finger_event() const {
 
-  return internal_event.type == SDL_FINGERMOTION
-    || internal_event.type == SDL_FINGERDOWN
-    || internal_event.type == SDL_FINGERUP;
+  return internal_event.type == sf::Event::TouchMoved
+    || internal_event.type == sf::Event::TouchBegan
+    || internal_event.type == sf::Event::TouchEnded;
 }
 
 /**
@@ -635,7 +645,7 @@ bool InputEvent::is_finger_event() const {
  */
 bool InputEvent::is_window_event() const {
 
-  return internal_event.type == SDL_QUIT; // other SDL window events are ignored
+  return internal_event.type == sf::Event::Closed; // other SFML window events are ignored
 }
 
 // keyboard
@@ -647,8 +657,8 @@ bool InputEvent::is_window_event() const {
  */
 bool InputEvent::is_keyboard_key_pressed() const {
 
-  return internal_event.type == SDL_KEYDOWN
-    && (!internal_event.key.repeat || repeat_keyboard);
+  return internal_event.type == sf::Event::KeyPressed;
+    //&& (!internal_event.key.repeat || repeat_keyboard);
 }
 
 /**
@@ -710,8 +720,8 @@ bool InputEvent::is_keyboard_non_direction_key_pressed() const {
  */
 bool InputEvent::is_keyboard_key_released() const {
 
-  return internal_event.type == SDL_KEYUP
-    && (!internal_event.key.repeat || repeat_keyboard);
+  return internal_event.type == sf::Event::KeyReleased;
+    //&& (!internal_event.key.repeat || repeat_keyboard);
 }
 
 /**
@@ -777,7 +787,7 @@ bool InputEvent::is_keyboard_non_direction_key_released() const {
 bool InputEvent::is_with_shift() const {
 
   return is_keyboard_event()
-    && (internal_event.key.keysym.mod & KMOD_SHIFT);
+    && internal_event.key.shift;
 }
 
 /**
@@ -791,7 +801,7 @@ bool InputEvent::is_with_shift() const {
 bool InputEvent::is_with_control() const {
 
   return is_keyboard_event()
-    && (internal_event.key.keysym.mod & KMOD_CTRL);
+    && internal_event.key.control;
 }
 
 /**
@@ -805,7 +815,7 @@ bool InputEvent::is_with_control() const {
 bool InputEvent::is_with_alt() const {
 
   return is_keyboard_event()
-    && (internal_event.key.keysym.mod & KMOD_ALT);
+    && internal_event.key.alt;
 }
 
 /**
@@ -825,13 +835,13 @@ InputEvent::KeyboardKey InputEvent::get_keyboard_key() const {
     return KeyboardKey::NONE;
   }
 
-  SDL_Keycode sdl_symbol = internal_event.key.keysym.sym;
-  if (EnumInfoTraits<KeyboardKey>::names.find(static_cast<KeyboardKey>(sdl_symbol)) ==
+  sf::Keyboard::Key sfml_symbol = internal_event.key.code;
+  if (EnumInfoTraits<KeyboardKey>::names.find(static_cast<KeyboardKey>(sfml_symbol)) ==
       EnumInfoTraits<KeyboardKey>::names.end()) {
     return KeyboardKey::NONE;
   }
 
-  return static_cast<KeyboardKey>(sdl_symbol);
+  return static_cast<KeyboardKey>(sfml_symbol);
 }
 
 /**
@@ -840,7 +850,7 @@ InputEvent::KeyboardKey InputEvent::get_keyboard_key() const {
  */
 bool InputEvent::is_character_pressed() const {
 
-  return internal_event.type == SDL_TEXTINPUT;
+  return internal_event.type == sf::Event::TextEntered;
 }
 
 /**
@@ -848,8 +858,9 @@ bool InputEvent::is_character_pressed() const {
  * \return The UTF-8 string corresponding to the entered character, or an empty string if this is not a text event.
  */
 std::string InputEvent::get_character() const {
-
-  return internal_event.text.text;
+  std::wstring ws = sf::String(internal_event.text.unicode).toWideString();
+  std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+  return converter.to_bytes(ws);
 }
 
 /**
@@ -858,12 +869,11 @@ std::string InputEvent::get_character() const {
  */
 void InputEvent::simulate_key_pressed(KeyboardKey key) {
 
-  SDL_Event event;
-  event.type = SDL_KEYDOWN;
-  event.key.keysym.sym = static_cast<SDL_Keycode>(key);
-  event.key.repeat = 0;
+  sf::Event event;
+  event.type = sf::Event::KeyPressed;
+  event.key.code = static_cast<sf::Keyboard::Key>(key);
 
-  SDL_PushEvent(&event);
+  InputEvent::push_event(event);
 }
 
 /**
@@ -872,12 +882,11 @@ void InputEvent::simulate_key_pressed(KeyboardKey key) {
  */
 void InputEvent::simulate_key_released(KeyboardKey key) {
 
-  SDL_Event event;
-  event.type = SDL_KEYUP;
-  event.key.keysym.sym = static_cast<SDL_Keycode>(key);
-  event.key.repeat = 0;
+  sf::Event event;
+  event.type = sf::Event::KeyReleased;
+  event.key.code = static_cast<sf::Keyboard::Key>(key);
 
-  SDL_PushEvent(&event);
+  InputEvent::push_event(event);
 }
 
 // joypad
@@ -934,7 +943,7 @@ void InputEvent::set_joypad_enabled(bool joypad_enabled) {
  */
 bool InputEvent::is_joypad_button_pressed() const {
 
-  return internal_event.type == SDL_JOYBUTTONDOWN;
+  return internal_event.type == sf::Event::JoystickButtonPressed;
 }
 
 /**
@@ -944,7 +953,7 @@ bool InputEvent::is_joypad_button_pressed() const {
  */
 bool InputEvent::is_joypad_button_released() const {
 
-  return internal_event.type == SDL_JOYBUTTONUP;
+  return internal_event.type == sf::Event::JoystickButtonReleased;
 }
 
 /**
@@ -961,7 +970,7 @@ int InputEvent::get_joypad_button() const {
     return -1;
   }
 
-  return internal_event.jbutton.button;
+  return internal_event.joystickButton.button;
 }
 
 /**
@@ -971,7 +980,7 @@ int InputEvent::get_joypad_button() const {
  */
 bool InputEvent::is_joypad_axis_moved() const {
 
-  return internal_event.type == SDL_JOYAXISMOTION;
+  return internal_event.type == sf::Event::JoystickMoved;
 }
 
 /**
@@ -989,7 +998,7 @@ int InputEvent::get_joypad_axis() const {
     return -1;
   }
 
-  return internal_event.jaxis.axis;
+  return internal_event.joystickMove.axis;
 }
 
 /**
@@ -1008,7 +1017,7 @@ int InputEvent::get_joypad_axis_state() const {
   }
 
   int result;
-  int value = internal_event.jaxis.value;
+  int value = internal_event.joystickMove.position;
   if (std::abs(value) < 10000) {
     result = 0;
   }
@@ -1040,8 +1049,8 @@ bool InputEvent::is_joypad_axis_centered() const {
  * \return true if this is a joypad hat event
  */
 bool InputEvent::is_joypad_hat_moved() const {
-
-  return internal_event.type == SDL_JOYHATMOTION;
+    return false;
+  //return internal_event.type == sf::Event::JoystickMoved; //TODO discriminate axis...
 }
 
 /**
@@ -1058,7 +1067,7 @@ int InputEvent::get_joypad_hat() const {
     return -1;
   }
 
-  return internal_event.jhat.hat;
+  return internal_event.joystickMove.position;
 }
 
 /**
@@ -1078,8 +1087,9 @@ int InputEvent::get_joypad_hat_direction() const {
   }
 
   int result = -1;
-
-  switch (internal_event.jhat.value) {
+  return result;
+  //TODO joypad hat SFML redo
+  /*switch (internal_event.jhat.value) {
 
     case SDL_HAT_RIGHT:
       result = 0;
@@ -1115,7 +1125,7 @@ int InputEvent::get_joypad_hat_direction() const {
 
   }
 
-  return result;
+  return result;*/
 }
 
 /**
@@ -1143,7 +1153,7 @@ bool InputEvent::is_joypad_hat_centered() const {
  */
 bool InputEvent::is_mouse_button_pressed() const {
 
-  return internal_event.type == SDL_MOUSEBUTTONDOWN;
+  return internal_event.type == sf::Event::MouseButtonPressed;
 }
 
 /**
@@ -1155,7 +1165,7 @@ bool InputEvent::is_mouse_button_pressed() const {
 bool InputEvent::is_mouse_button_pressed(MouseButton button) const {
 
   return is_mouse_button_pressed()
-    && static_cast<MouseButton>(internal_event.button.button) == button;
+    && static_cast<MouseButton>(internal_event.mouseButton.button) == button;
 }
 
 /**
@@ -1165,7 +1175,7 @@ bool InputEvent::is_mouse_button_pressed(MouseButton button) const {
  */
 bool InputEvent::is_mouse_button_released() const {
 
-  return internal_event.type == SDL_MOUSEBUTTONUP;
+  return internal_event.type == sf::Event::MouseButtonReleased;
 }
 
 /**
@@ -1177,7 +1187,7 @@ bool InputEvent::is_mouse_button_released() const {
 bool InputEvent::is_mouse_button_released(MouseButton button) const {
 
   return is_mouse_button_released()
-    && static_cast<MouseButton>(internal_event.button.button) == button;
+    && static_cast<MouseButton>(internal_event.mouseButton.button) == button;
 }
 
 /**
@@ -1193,7 +1203,7 @@ InputEvent::MouseButton InputEvent::get_mouse_button() const {
     return MouseButton::NONE;
   }
 
-  return static_cast<MouseButton>(internal_event.button.button);
+  return static_cast<MouseButton>(internal_event.mouseButton.button);
 }
 
 /**
@@ -1208,7 +1218,7 @@ bool InputEvent::get_mouse_position(Point& mouse_xy) const {
   Debug::check_assertion(is_mouse_event(), "Event is not a mouse event");
 
   return Video::renderer_to_quest_coordinates(
-      Point(internal_event.button.x, internal_event.button.y), mouse_xy);
+      Point(internal_event.mouseButton.x, internal_event.mouseButton.y), mouse_xy);
 }
 
 // touch finger
@@ -1220,7 +1230,7 @@ bool InputEvent::get_mouse_position(Point& mouse_xy) const {
  */
 bool InputEvent::is_finger_pressed() const {
 
-  return internal_event.type == SDL_FINGERDOWN;
+  return internal_event.type == sf::Event::TouchBegan;
 }
 
 /**
@@ -1232,7 +1242,7 @@ bool InputEvent::is_finger_pressed() const {
 bool InputEvent::is_finger_pressed(int finger_id) const {
 
   return is_finger_pressed()
-    && static_cast<int>(internal_event.tfinger.fingerId) == finger_id;
+    && static_cast<int>(internal_event.touch.finger) == finger_id;
 }
 
 /**
@@ -1242,7 +1252,7 @@ bool InputEvent::is_finger_pressed(int finger_id) const {
  */
 bool InputEvent::is_finger_released() const {
 
-  return internal_event.type == SDL_FINGERUP;
+  return internal_event.type == sf::Event::TouchEnded;
 }
 
 /**
@@ -1254,7 +1264,7 @@ bool InputEvent::is_finger_released() const {
 bool InputEvent::is_finger_released(int finger_id) const {
 
   return is_finger_released()
-    && static_cast<int>(internal_event.tfinger.fingerId) == finger_id;
+    && static_cast<int>(internal_event.touch.finger) == finger_id;
 }
 
 /**
@@ -1264,7 +1274,7 @@ bool InputEvent::is_finger_released(int finger_id) const {
  */
 bool InputEvent::is_finger_moved() const {
 
-  return internal_event.type == SDL_FINGERMOTION;
+  return internal_event.type == sf::Event::TouchMoved;
 }
 
 /**
@@ -1276,7 +1286,7 @@ bool InputEvent::is_finger_moved() const {
 bool InputEvent::is_finger_moved(int finger_id) const {
 
   return is_finger_moved()
-    && static_cast<int>(internal_event.tfinger.fingerId) == finger_id;
+    && static_cast<int>(internal_event.touch.finger) == finger_id;
 }
 
 /**
@@ -1290,7 +1300,7 @@ int InputEvent::get_finger() const {
 
   Debug::check_assertion(is_finger_event(), "Event is not a touch finger event");
 
-  return static_cast<int>(internal_event.tfinger.fingerId);
+  return static_cast<int>(internal_event.touch.finger);
 }
 
 /**
@@ -1304,9 +1314,10 @@ Point InputEvent::get_finger_position() const {
 
   Debug::check_assertion(is_finger_event(), "Event is not a touch finger event");
 
-  const Size window_size = Video::get_window_size();
-  const int x = internal_event.tfinger.x * static_cast<float>(window_size.width);
-  const int y = internal_event.tfinger.y * static_cast<float>(window_size.height);
+  //const Size window_size = Video::get_window_size();
+  //TODO check if SFML coordinates are in pixels...
+  const int x = internal_event.touch.x;// * static_cast<float>(window_size.width);
+  const int y = internal_event.touch.y;// * static_cast<float>(window_size.height);
 
   return Video::window_to_quest_coordinates(Point(x, y));
 }
@@ -1320,9 +1331,9 @@ Point InputEvent::get_finger_distance() const {
 
   Debug::check_assertion(is_finger_event(), "Event is not a touch finger event");
 
-  const Size window_size = Video::get_window_size();
-  const int x = internal_event.tfinger.x * static_cast<float>(window_size.width);
-  const int y = internal_event.tfinger.y * static_cast<float>(window_size.height);
+  //const Size window_size = Video::get_window_size();
+  const int x = internal_event.touch.x;// * static_cast<float>(window_size.width);
+  const int y = internal_event.touch.y;// * static_cast<float>(window_size.height);
 
   return Video::window_to_quest_coordinates(Point(x, y));
 }
@@ -1335,7 +1346,7 @@ float InputEvent::get_finger_pressure() const {
 
   Debug::check_assertion(is_finger_event(), "Event is not a touch finger event");
 
-  return internal_event.tfinger.pressure;
+  return 1; //TODO check SFML for pressure
 }
 
 // functions common to keyboard and joypad events
@@ -1467,8 +1478,7 @@ bool InputEvent::is_released() const {
  * \return true if this is a window closing event
  */
 bool InputEvent::is_window_closing() const {
-
-  return internal_event.type == SDL_QUIT;
+  return internal_event.type == sf::Event::Closed;
 }
 
 }

@@ -92,6 +92,7 @@ class Surface: public Drawable {
 
     SurfaceImpl* get_internal_surface();
     RenderTexture &request_render();
+    void seal_to_texture();
 
     bool is_pixel_transparent(int index) const;
 

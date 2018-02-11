@@ -7,6 +7,7 @@ RenderTexture::RenderTexture(int width, int height, bool depth_buffer)
     if(!target.create(width,height,depth_buffer)) {
         Solarus::Debug::error("Could not create render target");
     }
+    target.clear(sf::Color::Transparent);
 }
 
 const sf::Texture &RenderTexture::get_texture() const {

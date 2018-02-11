@@ -24,8 +24,11 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <queue>
 #include <SDL_events.h>
 #include <SDL_joystick.h>
+
+#include <SFML/Window/Event.hpp>
 
 namespace Solarus {
 
@@ -54,134 +57,134 @@ class InputEvent {
      * savegames because savegames use a string name to store the commands.
      */
     enum class KeyboardKey {
-      NONE                     = SDLK_UNKNOWN,
-      BACKSPACE                = SDLK_BACKSPACE,
-      TABULATION               = SDLK_TAB,
-      CLEAR                    = SDLK_CLEAR,
-      RETURN                   = SDLK_RETURN,
-      PAUSE                    = SDLK_PAUSE,
-      ESCAPE                   = SDLK_ESCAPE,
-      SPACE                    = SDLK_SPACE,
-      EXCLAMATION_MARK         = SDLK_EXCLAIM,
-      DOULE_QUOTE              = SDLK_QUOTEDBL,
-      HASH                     = SDLK_HASH,
-      DOLLAR                   = SDLK_DOLLAR,
-      AMPERSAND                = SDLK_AMPERSAND,
-      SINGLE_QUOTE             = SDLK_QUOTE,
-      LEFT_PARENTHESIS         = SDLK_LEFTPAREN,
-      RIGHT_PARENTHESIS        = SDLK_RIGHTPAREN,
-      ASTERISK                 = SDLK_ASTERISK,
-      PLUS                     = SDLK_PLUS,
-      COMMA                    = SDLK_COMMA,
-      MINUS                    = SDLK_MINUS,
-      PERIOD                   = SDLK_PERIOD,
-      SLASH                    = SDLK_SLASH,
-      NUMBER_0                 = SDLK_0,
-      NUMBER_1                 = SDLK_1,
-      NUMBER_2                 = SDLK_2,
-      NUMBER_3                 = SDLK_3,
-      NUMBER_4                 = SDLK_4,
-      NUMBER_5                 = SDLK_5,
-      NUMBER_6                 = SDLK_6,
-      NUMBER_7                 = SDLK_7,
-      NUMBER_8                 = SDLK_8,
-      NUMBER_9                 = SDLK_9,
-      COLON                    = SDLK_COLON,
-      SEMICOLON                = SDLK_SEMICOLON,
-      LESS                     = SDLK_LESS,
-      EQUALS                   = SDLK_EQUALS,
-      GREATER                  = SDLK_GREATER,
-      QUESTION_MARK            = SDLK_QUESTION,
-      AT                       = SDLK_AT,
-      LEFT_BRACKET             = SDLK_LEFTBRACKET,
-      BACKSLASH                = SDLK_BACKSLASH,
-      RIGHT_BRACKET            = SDLK_RIGHTBRACKET,
-      CARET                    = SDLK_CARET,
-      UNDERSCORE               = SDLK_UNDERSCORE,
-      BACKQUOTE                = SDLK_BACKQUOTE,
-      a                        = SDLK_a,
-      b                        = SDLK_b,
-      c                        = SDLK_c,
-      d                        = SDLK_d,
-      e                        = SDLK_e,
-      f                        = SDLK_f,
-      g                        = SDLK_g,
-      h                        = SDLK_h,
-      i                        = SDLK_i,
-      j                        = SDLK_j,
-      k                        = SDLK_k,
-      l                        = SDLK_l,
-      m                        = SDLK_m,
-      n                        = SDLK_n,
-      o                        = SDLK_o,
-      p                        = SDLK_p,
-      q                        = SDLK_q,
-      r                        = SDLK_r,
-      s                        = SDLK_s,
-      t                        = SDLK_t,
-      u                        = SDLK_u,
-      v                        = SDLK_v,
-      w                        = SDLK_w,
-      x                        = SDLK_x,
-      y                        = SDLK_y,
-      z                        = SDLK_z,
-      KEY_DELETE               = SDLK_DELETE,
+      NONE                     = sf::Keyboard::Key::Unknown,
+      BACKSPACE                = sf::Keyboard::Key::BackSpace,
+      TABULATION               = sf::Keyboard::Key::Tab,
+      CLEAR                    = sf::Keyboard::Key::Unknown,
+      RETURN                   = sf::Keyboard::Key::Return,
+      PAUSE                    = sf::Keyboard::Key::Pause,
+      ESCAPE                   = sf::Keyboard::Key::Escape,
+      SPACE                    = sf::Keyboard::Key::Space,
+      EXCLAMATION_MARK         = sf::Keyboard::Key::Unknown, //TODO check
+      DOULE_QUOTE              = sf::Keyboard::Key::Quote, //TODO check
+      HASH                     = sf::Keyboard::Key::Unknown,
+      DOLLAR                   = sf::Keyboard::Unknown,
+      AMPERSAND                = sf::Keyboard::Unknown,
+      SINGLE_QUOTE             = sf::Keyboard::Quote,
+      LEFT_PARENTHESIS         = sf::Keyboard::Unknown,
+      RIGHT_PARENTHESIS        = sf::Keyboard::Unknown,
+      ASTERISK                 = sf::Keyboard::Key::Unknown,
+      PLUS                     = sf::Keyboard::Key::Add,
+      COMMA                    = sf::Keyboard::Key::Comma,
+      MINUS                    = sf::Keyboard::Key::Subtract,
+      PERIOD                   = sf::Keyboard::Key::Period,
+      SLASH                    = sf::Keyboard::Key::Slash,
+      NUMBER_0                 = sf::Keyboard::Key::Num0,
+      NUMBER_1                 = sf::Keyboard::Key::Num1,
+      NUMBER_2                 = sf::Keyboard::Key::Num2,
+      NUMBER_3                 = sf::Keyboard::Key::Num3,
+      NUMBER_4                 = sf::Keyboard::Key::Num4,
+      NUMBER_5                 = sf::Keyboard::Key::Num5,
+      NUMBER_6                 = sf::Keyboard::Key::Num6,
+      NUMBER_7                 = sf::Keyboard::Key::Num7,
+      NUMBER_8                 = sf::Keyboard::Key::Num8,
+      NUMBER_9                 = sf::Keyboard::Key::Num9,
+      COLON                    = sf::Keyboard::Key::Unknown,
+      SEMICOLON                = sf::Keyboard::Key::SemiColon,
+      LESS                     = sf::Keyboard::Key::Unknown,
+      EQUALS                   = sf::Keyboard::Key::Equal,
+      GREATER                  = sf::Keyboard::Key::Unknown,
+      QUESTION_MARK            = sf::Keyboard::Key::Unknown,
+      AT                       = sf::Keyboard::Key::Unknown,
+      LEFT_BRACKET             = sf::Keyboard::Key::LBracket,
+      BACKSLASH                = sf::Keyboard::Key::BackSlash,
+      RIGHT_BRACKET            = sf::Keyboard::Key::RBracket,
+      CARET                    = sf::Keyboard::Key::Unknown,
+      UNDERSCORE               = sf::Keyboard::Key::Unknown,
+      BACKQUOTE                = sf::Keyboard::Key::Unknown,
+      a                        = sf::Keyboard::Key::A,
+      b                        = sf::Keyboard::Key::B,
+      c                        = sf::Keyboard::Key::C,
+      d                        = sf::Keyboard::Key::D,
+      e                        = sf::Keyboard::Key::E,
+      f                        = sf::Keyboard::Key::F,
+      g                        = sf::Keyboard::Key::G,
+      h                        = sf::Keyboard::Key::H,
+      i                        = sf::Keyboard::Key::I,
+      j                        = sf::Keyboard::Key::J,
+      k                        = sf::Keyboard::Key::K,
+      l                        = sf::Keyboard::Key::L,
+      m                        = sf::Keyboard::Key::M,
+      n                        = sf::Keyboard::Key::N,
+      o                        = sf::Keyboard::Key::O,
+      p                        = sf::Keyboard::Key::P,
+      q                        = sf::Keyboard::Key::Q,
+      r                        = sf::Keyboard::Key::R,
+      s                        = sf::Keyboard::Key::S,
+      t                        = sf::Keyboard::Key::T,
+      u                        = sf::Keyboard::Key::U,
+      v                        = sf::Keyboard::Key::V,
+      w                        = sf::Keyboard::Key::W,
+      x                        = sf::Keyboard::Key::X,
+      y                        = sf::Keyboard::Key::Y,
+      z                        = sf::Keyboard::Key::Z,
+      KEY_DELETE               = sf::Keyboard::Key::Delete,
 
-      KP0                      = SDLK_KP_0,
-      KP1                      = SDLK_KP_1,
-      KP2                      = SDLK_KP_2,
-      KP3                      = SDLK_KP_3,
-      KP4                      = SDLK_KP_4,
-      KP5                      = SDLK_KP_5,
-      KP6                      = SDLK_KP_6,
-      KP7                      = SDLK_KP_7,
-      KP8                      = SDLK_KP_8,
-      KP9                      = SDLK_KP_9,
-      KP_PERIOD                = SDLK_KP_PERIOD,
-      KP_DIVIDE                = SDLK_KP_DIVIDE,
-      KP_MULTIPLY              = SDLK_KP_MULTIPLY,
-      KP_MINUS                 = SDLK_KP_MINUS,
-      KP_PLUS                  = SDLK_KP_PLUS,
-      KP_ENTER                 = SDLK_KP_ENTER,
-      KP_EQUALS                = SDLK_KP_EQUALS,
+      KP0                      = sf::Keyboard::Key::Numpad0,
+      KP1                      = sf::Keyboard::Key::Numpad1,
+      KP2                      = sf::Keyboard::Key::Numpad2,
+      KP3                      = sf::Keyboard::Key::Numpad3,
+      KP4                      = sf::Keyboard::Key::Numpad4,
+      KP5                      = sf::Keyboard::Key::Numpad5,
+      KP6                      = sf::Keyboard::Key::Numpad6,
+      KP7                      = sf::Keyboard::Key::Numpad7,
+      KP8                      = sf::Keyboard::Key::Numpad8,
+      KP9                      = sf::Keyboard::Key::Numpad9,
+      KP_PERIOD                = sf::Keyboard::Key::Period,
+      KP_DIVIDE                = sf::Keyboard::Key::Divide,
+      KP_MULTIPLY              = sf::Keyboard::Key::Multiply,
+      KP_MINUS                 = sf::Keyboard::Key::Subtract,
+      KP_PLUS                  = sf::Keyboard::Key::Add,
+      KP_ENTER                 = sf::Keyboard::Key::Return, //TODO check
+      KP_EQUALS                = sf::Keyboard::Key::Equal,
 
-      UP                       = SDLK_UP,
-      DOWN                     = SDLK_DOWN,
-      RIGHT                    = SDLK_RIGHT,
-      LEFT                     = SDLK_LEFT,
-      INSERT                   = SDLK_INSERT,
-      HOME                     = SDLK_HOME,
-      END                      = SDLK_END,
-      PAGE_UP                  = SDLK_PAGEUP,
-      PAGE_DOWN                = SDLK_PAGEDOWN,
+      UP                       = sf::Keyboard::Key::Up,
+      DOWN                     = sf::Keyboard::Key::Down,
+      RIGHT                    = sf::Keyboard::Key::Right,
+      LEFT                     = sf::Keyboard::Key::Left,
+      INSERT                   = sf::Keyboard::Key::Insert,
+      HOME                     = sf::Keyboard::Key::Home,
+      END                      = sf::Keyboard::Key::End,
+      PAGE_UP                  = sf::Keyboard::Key::PageUp,
+      PAGE_DOWN                = sf::Keyboard::Key::PageDown,
 
-      F1                       = SDLK_F1,
-      F2                       = SDLK_F2,
-      F3                       = SDLK_F3,
-      F4                       = SDLK_F4,
-      F5                       = SDLK_F5,
-      F6                       = SDLK_F6,
-      F7                       = SDLK_F7,
-      F8                       = SDLK_F8,
-      F9                       = SDLK_F9,
-      F10                      = SDLK_F10,
-      F11                      = SDLK_F11,
-      F12                      = SDLK_F12,
-      F13                      = SDLK_F13,
-      F14                      = SDLK_F14,
-      F15                      = SDLK_F15,
+      F1                       = sf::Keyboard::Key::F1,
+      F2                       = sf::Keyboard::Key::F2,
+      F3                       = sf::Keyboard::Key::F3,
+      F4                       = sf::Keyboard::Key::F4,
+      F5                       = sf::Keyboard::Key::F5,
+      F6                       = sf::Keyboard::Key::F6,
+      F7                       = sf::Keyboard::Key::F7,
+      F8                       = sf::Keyboard::Key::F8,
+      F9                       = sf::Keyboard::Key::F9,
+      F10                      = sf::Keyboard::Key::F10,
+      F11                      = sf::Keyboard::Key::F11,
+      F12                      = sf::Keyboard::Key::F12,
+      F13                      = sf::Keyboard::Key::F13,
+      F14                      = sf::Keyboard::Key::F14,
+      F15                      = sf::Keyboard::Key::F15,
 
-      NUMLOCK                  = SDLK_NUMLOCKCLEAR,
-      CAPSLOCK                 = SDLK_CAPSLOCK,
-      SCROLLOCK                = SDLK_SCROLLLOCK,
-      RIGHT_SHIFT              = SDLK_RSHIFT,
-      LEFT_SHIFT               = SDLK_LSHIFT,
-      RIGHT_CONTROL            = SDLK_RCTRL,
-      LEFT_CONTROL             = SDLK_LCTRL,
-      RIGHT_ALT                = SDLK_RALT,
-      LEFT_ALT                 = SDLK_LALT,
-      RIGHT_META               = SDLK_RGUI,
-      LEFT_META                = SDLK_LGUI
+      NUMLOCK                  = sf::Keyboard::Key::Unknown,
+      CAPSLOCK                 = sf::Keyboard::Key::Unknown,
+      SCROLLOCK                = sf::Keyboard::Key::Unknown,
+      RIGHT_SHIFT              = sf::Keyboard::Key::RShift,
+      LEFT_SHIFT               = sf::Keyboard::Key::LShift,
+      RIGHT_CONTROL            = sf::Keyboard::Key::RControl,
+      LEFT_CONTROL             = sf::Keyboard::Key::LControl,
+      RIGHT_ALT                = sf::Keyboard::Key::RAlt,
+      LEFT_ALT                 = sf::Keyboard::Key::LAlt,
+      RIGHT_META               = sf::Keyboard::Key::RSystem,
+      LEFT_META                = sf::Keyboard::Key::LSystem
     };
 
     /**
@@ -195,11 +198,11 @@ class InputEvent {
      */
     enum class MouseButton {
       NONE            = -1,
-      LEFT            = SDL_BUTTON_LEFT,
-      MIDDLE          = SDL_BUTTON_MIDDLE,
-      RIGHT           = SDL_BUTTON_RIGHT,
-      X1              = SDL_BUTTON_X1,
-      X2              = SDL_BUTTON_X2,
+      LEFT            = sf::Mouse::Button::Left,
+      MIDDLE          = sf::Mouse::Button::Middle,
+      RIGHT           = sf::Mouse::Button::Right,
+      X1              = sf::Mouse::Button::XButton1,
+      X2              = sf::Mouse::Button::XButton2,
     };
 
     static void initialize();
@@ -207,7 +210,8 @@ class InputEvent {
     static bool is_initialized();
 
     // retrieve the current event
-    static std::unique_ptr<InputEvent> get_event();
+    static std::unique_ptr<InputEvent> get_event(sf::Window& window);
+    static void push_event(const sf::Event& event);
 
     // global information
     static void set_key_repeat(bool repeat);
@@ -309,7 +313,7 @@ class InputEvent {
 
   private:
 
-    explicit InputEvent(const SDL_Event& event);
+    explicit InputEvent(const sf::Event &event);
 
     static const KeyboardKey directional_keys[];  /**< array of the keyboard directional keys */
     static bool initialized;                      /**< Whether the input manager is initialized. */
@@ -322,10 +326,12 @@ class InputEvent {
     static std::map<MouseButton, std::string>
       mouse_button_names;                         /**< Names of all existing mouse buttons. */
     static bool repeat_keyboard;                  /**< True to handle repeat KEYDOWN and KEYUP events. */
-    static std::set<SDL_Keycode> keys_pressed;    /**< Keys currently down, only according to SDL_KEYDOWN and SDL_KEYUP events
+    static std::set<sf::Keyboard::Key> keys_pressed;    /**< Keys currently down, only according to SDL_KEYDOWN and SDL_KEYUP events
                                                    * (i.e. independently of the real current state SDL_GetKeyboardState()). */
 
-    const SDL_Event internal_event;               /**< the internal event encapsulated */
+    static std::queue<sf::Event> simulated_events; /**< queue of simulated events */
+
+    const sf::Event internal_event;               /**< the internal event encapsulated */
 
 };
 

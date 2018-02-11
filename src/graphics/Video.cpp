@@ -37,6 +37,7 @@
 #include <SDL_render.h>
 
 #include <SFML/Graphics/Sprite.hpp>
+#include <SFML/Graphics/RectangleShape.hpp>
 
 namespace Solarus {
 
@@ -354,20 +355,47 @@ void show_window() {
 }
 
 /**
- * @brief get a sfml view to do letterboxing
- * @param view
- * @param windowWidth
- * @param windowHeight
+ * @brief letter_box_view
+ * @param window
+ * @param tex
  * @return
  */
-sf::View letter_box_view(int windowWidth, int windowHeight, int texture_width, int texture_height) {
+sf::View letter_box_view(const sf::RenderWindow& window, const sf::Texture& tex) {
 
     // Compares the aspect ratio of the window to the aspect ratio of the view,
     // and sets the view's viewport accordingly in order to archieve a letterbox effect.
     // A new view (with a new viewport set) is returned
     sf::View view;
-    view.setSize(texture_width,texture_height);
-    view.setCenter(texture_width/2,texture_height/2);
+    sf::Vector2u tsize = tex.getSize();
+    sf::Vector2u wsize = window.getSize();
+    view.setSize(tsize.x,tsize.y);
+    view.setCenter(tsize.x/2.f,tsize.y/2.f);
+
+    float windowRatio = wsize.x / (float) wsize.y;
+    float viewRatio = tsize.x / (float) tsize.y;
+    float sizeX = 1;
+    float sizeY = 1;
+    float posX = 0;
+    float posY = 0;
+
+    bool horizontalSpacing = true;
+    if (windowRatio < viewRatio)
+        horizontalSpacing = false;
+
+    // If horizontalSpacing is true, the black bars will appear on the left and right side.
+    // Otherwise, the black bars will appear on the top and bottom.
+
+    if (horizontalSpacing) {
+        sizeX = viewRatio / windowRatio;
+        posX = (1 - sizeX) / 2.f;
+    }
+
+    else {
+        sizeY = windowRatio / viewRatio;
+        posY = (1 - sizeY) / 2.f;
+    }
+
+    view.setViewport( sf::FloatRect(posX, posY, sizeX, sizeY));
 
     return view;
 }
@@ -409,8 +437,15 @@ void render(const SurfacePtr& quest_surface) {
     SDL_RenderPresent(context.main_renderer);*/
       //SFML rendering
     RenderTexture& rt = quest_surface->request_render();
-
-    context.main_window.draw(sf::Sprite(rt.get_texture()));
+    //sf::Image& img = rt.get_image();
+    const sf::Texture& tex = rt.get_texture();
+    sf::View v = letter_box_view(context.main_window,
+                                 tex);
+    context.main_window.clear();
+    context.main_window.setView(v);
+    sf::Sprite s(tex);
+    //s.setPosition(0,-40);
+    context.main_window.draw(s);
   }
   context.main_window.display();
 }
@@ -528,15 +563,6 @@ void set_quest_size_range(
       context.quest_size.height
   );
   SDL_SetTextureBlendMode(context.render_target, SDL_BLENDMODE_BLEND);*/
-
-  context.render_target.create(context.quest_size.width,context.quest_size.height);
-  context.final_sprite.setTexture(context.render_target.getTexture());
-  context.main_window.setView(letter_box_view(context.main_window.getSize().x,
-                                              context.main_window.getSize().y,
-                                              context.render_target.getSize().x,
-                                              context.render_target.getSize().y));
-  // We know the quest size: we can initialize legacy video modes.
-  //initialize_software_video_modes();
 }
 
 /**

@@ -105,11 +105,11 @@ void FontResource::load_fonts() {
       // It's an outline font.
       font.buffer = QuestFiles::data_file_read(font.file_name);
       font.bitmap_font = nullptr;
-      font.font.loadFromMemory(font.buffer.data(),font.buffer.size());
+      bool status = font.font.loadFromMemory(font.buffer.data(),font.buffer.size());
+      Debug::check_assertion(status,"could not load font " + font.file_name);
     }
     fonts.emplace(font_id, std::move(font));
   }
-
   fonts_loaded = true;
 }
 

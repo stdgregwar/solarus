@@ -32,6 +32,7 @@
 
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Rect.hpp>
+#include <SFML/Graphics/RectangleShape.hpp>
 
 namespace Solarus {
 
@@ -187,7 +188,7 @@ int Surface::get_width() const {
  * \return the height in pixels
  */
 int Surface::get_height() const {
-  return internal_surface->get_texture().getSize().x;
+  return internal_surface->get_texture().getSize().y;
 }
 
 /**
@@ -211,7 +212,6 @@ uint8_t Surface::get_opacity() const {
  * \param opacity The opacity (0 to 255).
  */
 void Surface::set_opacity(uint8_t opacity) {
-
   this->opacity = opacity;
 }
 
@@ -307,6 +307,12 @@ RenderTexture &Surface::request_render() {
     return *rt;
 }
 
+void Surface::seal_to_texture() {
+    sf::Image img = internal_surface->get_image();
+    Texture* new_tex = new Texture(img);
+    internal_surface.reset(new_tex);
+}
+
 /**
  * \brief Clears this surface.
  *
@@ -314,7 +320,7 @@ RenderTexture &Surface::request_render() {
  * The opacity property of the surface is preserved.
  */
 void Surface::clear() {
-    request_render().get_render_texture().clear();
+    request_render().get_render_texture().clear(sf::Color::Transparent);
 }
 
 /**
@@ -326,7 +332,12 @@ void Surface::clear() {
  * \param where The rectangle to clear.
  */
 void Surface::clear(const Rectangle& where) { //TODO deprecate
-    request_render().get_render_texture().clear();
+    RenderTexture& rt = request_render();
+    sf::RectangleShape r(where.get_size());
+    r.setFillColor(sf::Color::Transparent);
+    r.setPosition(where.get_top_left());
+    sf::RenderStates rs(sf::BlendNone);
+    rt.draw(r,rs); //Draw a transparent rectangle with no blend
 }
 
 /**
@@ -338,7 +349,7 @@ void Surface::clear(const Rectangle& where) { //TODO deprecate
  * \param color A color.
  */
 void Surface::fill_with_color(const Color& color) {
-  fill_with_color(color, Rectangle(Point(0, 0), get_size()));
+  request_render().get_render_texture().clear(color);
 }
 
 /**
@@ -352,7 +363,10 @@ void Surface::fill_with_color(const Color& color) {
  */
 void Surface::fill_with_color(const Color& color, const Rectangle& where) {
     RenderTexture& rt = request_render();
-
+    sf::RectangleShape rs(where.get_size());
+    rs.setPosition(where.get_xy());
+    rs.setFillColor(color);
+    request_render().draw(rs);
 }
 
 /**
@@ -378,7 +392,8 @@ void Surface::raw_draw_region(
     const Point& dst_position) {
     sf::Sprite s(internal_surface->get_texture(),region);
     s.setPosition(dst_position.x,dst_position.y);
-    request_render().draw(s);
+    s.setColor(sf::Color(255,255,255,opacity));
+    dst_surface.request_render().draw(s);
 }
 
 /**

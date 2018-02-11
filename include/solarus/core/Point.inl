@@ -35,6 +35,12 @@ constexpr Point::Point(int x, int y):
   x(x),
   y(y) {
 }
+/**
+ * @brief conversion operator to sf::Vector2
+ */
+inline Point::operator sf::Vector2f() const {
+    return {x,y};
+}
 
 /**
  * \brief Adds another point to this one.

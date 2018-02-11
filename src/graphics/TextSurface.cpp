@@ -29,6 +29,10 @@
 #include "solarus/lua/LuaTools.h"
 #include <lua.hpp>
 #include <memory>
+#include <codecvt>
+
+//TODO remove
+#include <SFML/Graphics/Sprite.hpp>
 
 namespace Solarus {
 
@@ -353,7 +357,7 @@ void TextSurface::add_char(char c) {
 int TextSurface::get_width() const {
 
   if (surface == nullptr) {
-    return 0;
+    return sf_text.getGlobalBounds().width;//TODO ceck local/global
   }
 
   return surface->get_width();
@@ -366,7 +370,7 @@ int TextSurface::get_width() const {
 int TextSurface::get_height() const {
 
   if (surface == nullptr) {
-    return 0;
+    return sf_text.getGlobalBounds().height;
   }
 
   return surface->get_height();
@@ -413,6 +417,7 @@ void TextSurface::rebuild() {
   // calculate the coordinates of the top-left corner
   int x_left = 0, y_top = 0;
 
+  //TODO redo text alignement
   switch (horizontal_alignment) {
 
   case HorizontalAlignment::LEFT:
@@ -420,11 +425,11 @@ void TextSurface::rebuild() {
     break;
 
   case HorizontalAlignment::CENTER:
-    x_left = x - surface->get_width() / 2;
+    x_left = x - get_width() / 2;
     break;
 
   case HorizontalAlignment::RIGHT:
-    x_left = x - surface->get_width();
+    x_left = x - get_width();
     break;
   }
 
@@ -435,11 +440,11 @@ void TextSurface::rebuild() {
     break;
 
   case VerticalAlignment::MIDDLE:
-    y_top = y - surface->get_height() / 2;
+    y_top = y - get_height() / 2;
     break;
 
   case VerticalAlignment::BOTTOM:
-    y_top = y - surface->get_height();
+    y_top = y - get_height();
     break;
   }
 
@@ -517,8 +522,13 @@ void TextSurface::rebuild_ttf() {
     break;
   }*/
 
+  sf_text.setCharacterSize(font_size);
+  sf_text.setFont(internal_font);
   sf_text.setColor(text_color);
-  sf_text.setString(text);
+  //TEST
+  std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+  std::wstring wide_text = converter.from_bytes(text);
+  sf_text.setString(wide_text);
 
   /*Debug::check_assertion(internal_surface != nullptr,
       std::string("Cannot create the text surface for string '") + text + "': "
@@ -544,6 +554,11 @@ void TextSurface::raw_draw(Surface& dst_surface,
   if (surface != nullptr) {
     surface->set_blend_mode(get_blend_mode());
     surface->raw_draw(dst_surface, dst_position + text_position);
+  } else {
+      sf_text.setPosition(dst_position+text_position);
+      //sf::Sprite s(sf_text.getFont()->getTexture(sf_text.getCharacterSize()));
+      //int size = s.getLocalBounds().width;
+      dst_surface.request_render().draw(sf_text);
   }
 }
 
@@ -561,6 +576,10 @@ void TextSurface::raw_draw_region(const Rectangle& region,
     surface->raw_draw_region(
         region, dst_surface,
         dst_position + text_position);
+  } else {
+      sf_text.setPosition(dst_position);
+      //TODO use view to crop text
+      dst_surface.request_render().draw(sf_text);
   }
 }
 
@@ -569,7 +588,7 @@ void TextSurface::raw_draw_region(const Rectangle& region,
  * \param transition The transition effect to apply.
  */
 void TextSurface::draw_transition(Transition& transition) {
-  transition.draw(*surface);
+    if(surface) transition.draw(*surface); //TODO fix this
 }
 
 /**
