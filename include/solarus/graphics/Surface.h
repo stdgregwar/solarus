@@ -51,7 +51,7 @@ class Surface;
 class Surface: public Drawable {
 
     friend class Shader;
-
+    friend class VertexArray; //TODO find cleaner way
   public:
     //using SDL_Surface_UniquePtr = std::unique_ptr<SDL_Surface, SDL_Surface_Deleter>;
     using SurfaceImpl_UniquePtr = std::unique_ptr<SurfaceImpl>;
@@ -67,6 +67,7 @@ class Surface: public Drawable {
 
     Surface(int width, int height);
     explicit Surface(SurfaceImpl* impl);
+    Surface(const sf::Image& img);
     ~Surface();
 
     // Surfaces should only created with std::make_shared.
@@ -92,7 +93,7 @@ class Surface: public Drawable {
 
     SurfaceImpl* get_internal_surface();
     RenderTexture &request_render();
-    void seal_to_texture();
+    SurfacePtr seal_to_texture() const;
 
     bool is_pixel_transparent(int index) const;
 
@@ -120,7 +121,7 @@ class Surface: public Drawable {
     uint8_t opacity;
     uint32_t get_pixel(int index) const;
     uint32_t get_color_value(const Color& color) const;
-    SDL_BlendMode get_sdl_blend_mode() const;
+    sf::BlendMode get_sfml_blend_mode() const;
 
     static SurfaceImpl* get_surface_from_file(
         const std::string& file_name,

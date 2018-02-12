@@ -135,6 +135,7 @@ file(
 	include/solarus/graphics/Hq2xFilter.h
 	include/solarus/graphics/Hq3xFilter.h
 	include/solarus/graphics/Hq4xFilter.h
+	include/solarus/graphics/RenderTargetAtlas.h
 	include/solarus/graphics/Scale2xFilter.h
 	include/solarus/graphics/Shader.h
 	include/solarus/graphics/ShaderContext.h
@@ -152,6 +153,7 @@ file(
 	include/solarus/graphics/SurfaceImpl.h
 	include/solarus/graphics/Texture.h
 	include/solarus/graphics/RenderTexture.h
+	include/solarus/graphics/DrawList.h
 	include/solarus/graphics/SurfacePtr.h
 	include/solarus/graphics/TextSurface.h
 	include/solarus/graphics/TransitionFade.h
@@ -159,6 +161,7 @@ file(
 	include/solarus/graphics/TransitionImmediate.h
 	include/solarus/graphics/TransitionScrolling.h
 	include/solarus/graphics/Video.h
+	include/solarus/graphics/VertexArray.h
 
 	include/solarus/hero/BackToSolidGroundState.h
 	include/solarus/hero/BoomerangState.h
@@ -227,6 +230,7 @@ file(
 	include/solarus/third_party/snes_spc/SPC_DSP.h
 	include/solarus/third_party/snes_spc/SPC_Filter.h
 	include/solarus/third_party/snes_spc/spc.h
+	include/solarus/third_party/shelf-pack.h
 
 	src/audio/ItDecoder.cpp
 	src/audio/Music.cpp
@@ -331,6 +335,7 @@ file(
 	src/graphics/Hq2xFilter.cpp
 	src/graphics/Hq3xFilter.cpp
 	src/graphics/Hq4xFilter.cpp
+	src/graphics/RenderTargetAtlas.cpp
 	src/graphics/Scale2xFilter.cpp
 	src/graphics/ShaderContext.cpp
 	src/graphics/ShaderData.cpp
@@ -346,12 +351,14 @@ file(
 	src/graphics/SurfaceImpl.cpp
 	src/graphics/Texture.cpp
 	src/graphics/RenderTexture.cpp
+	src/graphics/DrawList.cpp
 	src/graphics/TextSurface.cpp
 	src/graphics/Transition.cpp
 	src/graphics/TransitionFade.cpp
 	src/graphics/TransitionImmediate.cpp
 	src/graphics/TransitionScrolling.cpp
 	src/graphics/Video.cpp
+	src/graphics/VertexArray.cpp
 
 	src/hero/BackToSolidGroundState.cpp
 	src/hero/BoomerangState.cpp
@@ -434,7 +441,6 @@ file(
 	src/third_party/snes_spc/spc.cpp
 	src/third_party/snes_spc/SPC_DSP.cpp
 	src/third_party/snes_spc/SPC_Filter.cpp
-
 )
 
 # Additional source files for Apple systems.

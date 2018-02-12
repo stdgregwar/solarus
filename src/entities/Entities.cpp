@@ -764,7 +764,7 @@ void Entities::initialize_layers() {
 
   for (int layer = map.get_min_layer(); layer <= map.get_max_layer(); ++layer) {
     tiles_ground[layer] = std::vector<Ground>();
-    non_animated_regions[layer] = std::unique_ptr<NonAnimatedRegions>();
+    //non_animated_regions[layer] = std::unique_ptr<NonAnimatedRegions>();
     tiles_in_animated_regions[layer] = std::vector<TilePtr>();
     z_caches[layer] = ZCache();
   }

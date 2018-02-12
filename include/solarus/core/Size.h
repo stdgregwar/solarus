@@ -42,6 +42,7 @@ class Size {
     ////////////////////////////////////////////////////////////
     // Operators
     operator sf::Vector2f() const;
+    operator sf::Vector2u() const;
 
     Size& operator+=(const Size& other);
     Size& operator-=(const Size& other);

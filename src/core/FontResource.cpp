@@ -185,7 +185,7 @@ SurfacePtr FontResource::get_bitmap_font(const std::string& font_id) {
  * \param size Size to use.
  * \return The font.
  */
-sf::Font &FontResource::get_outline_font(const std::string& font_id, int size) {
+sf::Font &FontResource::get_outline_font(const std::string& font_id, int /*size*/) { //TODO supress parameter
 
   if (!fonts_loaded) {
     load_fonts();

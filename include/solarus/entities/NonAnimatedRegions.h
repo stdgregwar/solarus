@@ -21,6 +21,9 @@
 #include "solarus/containers/Grid.h"
 #include "solarus/entities/TileInfo.h"
 #include "solarus/graphics/SurfacePtr.h"
+#include "solarus/graphics/VertexArray.h"
+#include "solarus/entities/TilePattern.h"
+
 #include <vector>
 
 namespace Solarus {
@@ -45,8 +48,12 @@ class NonAnimatedRegions {
     void build(std::vector<TileInfo>& rejected_tiles);
     void notify_tileset_changed();
     void draw_on_map();
-
   private:
+
+    struct MapCell{
+        VertexArrayPtr v_array;
+        TilePattern::UpdaterPtr updater;
+    };
 
     bool overlaps_animated_tile(const TileInfo& tile) const;
     void build_cell(int cell_index);
@@ -63,10 +70,14 @@ class NonAnimatedRegions {
         non_animated_tiles;                 /**< All non-animated tiles. Stored in a grid so that
                                              * we can quickly find the ones to draw lazily later when the
                                              * camera moves. */
-    std::vector<SurfacePtr>
-        optimized_tiles_surfaces;           /**< All non-animated tiles are drawn here once for all
+    //std::vector<SurfacePtr>
+        /*optimized_tiles_surfaces;           /**< All non-animated tiles are drawn here once for all
                                              * for performance. Each cell of the grid has a surface
                                              * or nullptr before it is drawn. */
+    std::vector<MapCell>
+        optimized_map_cells;              /**< All static tiles are put here once for all for performance
+                                              * Each cell of the grid has a VertexArray. With type points
+                                              * when uninitialized*/
 
 };
 

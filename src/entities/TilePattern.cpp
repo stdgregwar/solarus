@@ -184,5 +184,50 @@ void TilePattern::fill_surface(
   }
 }
 
+
+TilePattern::UpdaterPtr TilePattern::fill_vertex_array(
+        VertexArray& array,
+        const Rectangle& dst_position,
+        const Tileset& tileset,
+        const Point& viewport,
+        const Size& cell_size
+        ) const {
+    Point dst;
+
+    int limit_x = dst_position.get_x() + dst_position.get_width();
+    int limit_y = dst_position.get_y() + dst_position.get_height();
+
+    std::vector<TilePattern::UpdaterPtr> updaters;
+
+    for (int y = dst_position.get_y();
+        y < limit_y;
+        y += get_height()) {
+
+      if ((y <= cell_size.height && y + get_height() > 0)
+          || !is_drawn_at_its_position()) {
+        dst.y = y;
+
+        for (int x = dst_position.get_x();
+            x < limit_x;
+            x += get_width()) {
+
+          if ((x <= cell_size.width && x + get_width() > 0)
+              || !is_drawn_at_its_position()) {
+            dst.x = x;
+            //draw(dst_surface, dst, tileset, viewport);
+            auto u = add_vertices(array,dst,tileset,viewport);
+            if(u){
+                updaters.emplace_back(std::move(u));
+            }
+          }
+        }
+      }
+    }
+    if(!updaters.empty()) {
+        return TilePattern::UpdaterPtr(new TilePattern::MultiUpdater(std::move(updaters)));
+    }
+    return nullptr;
+}
+
 }
 

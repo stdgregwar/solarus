@@ -85,7 +85,6 @@ struct VideoContext {
   const SoftwareVideoMode*
       default_video_mode = nullptr;         /**< Default software video mode. */
   SurfacePtr scaled_surface = nullptr;      /**< The screen surface used with software-scaled modes. */
-
 };
 
 VideoContext context;
@@ -360,13 +359,12 @@ void show_window() {
  * @param tex
  * @return
  */
-sf::View letter_box_view(const sf::RenderWindow& window, const sf::Texture& tex) {
+sf::View letter_box_view(const sf::RenderWindow& window, const sf::Vector2u tsize) {
 
     // Compares the aspect ratio of the window to the aspect ratio of the view,
     // and sets the view's viewport accordingly in order to archieve a letterbox effect.
     // A new view (with a new viewport set) is returned
     sf::View view;
-    sf::Vector2u tsize = tex.getSize();
     sf::Vector2u wsize = window.getSize();
     view.setSize(tsize.x,tsize.y);
     view.setCenter(tsize.x/2.f,tsize.y/2.f);
@@ -439,8 +437,7 @@ void render(const SurfacePtr& quest_surface) {
     RenderTexture& rt = quest_surface->request_render();
     //sf::Image& img = rt.get_image();
     const sf::Texture& tex = rt.get_texture();
-    sf::View v = letter_box_view(context.main_window,
-                                 tex);
+    sf::View v = letter_box_view(context.main_window,sf::Vector2u(rt.get_width(),rt.get_height()));
     context.main_window.clear();
     context.main_window.setView(v);
     sf::Sprite s(tex);
@@ -840,7 +837,7 @@ Size get_window_size() {
   // Returns the current window size
   sf::Vector2u size = context.main_window.getSize();
 
-  return {size.x, size.y};
+  return Size(size.x, size.y);
 }
 
 /**
@@ -869,7 +866,7 @@ void set_window_size(const Size& size) {
     int width = context.window_size.width;
     int height = context.window_size.height;
     if (width != size.width || height != size.height) {
-        context.main_window.setSize({size.width,size.height});
+        context.main_window.setSize(size);
     }
   }
 }
@@ -900,7 +897,7 @@ Size get_output_size() {
 
   sf::Vector2u size = context.main_window.getSize();
 
-  return { size.x, size.y };
+  return Size(size.x, size.y);
 }
 
 /**

@@ -201,8 +201,8 @@ void Shader::set_uniform_4f(const std::string& n, float x, float y, float z, flo
  */
 bool Shader::set_uniform_texture(const std::string& n, const SurfacePtr& surface) {
   // TODO make pure virtual
-    auto texture = surface->internal_surface->get_texture();
-    sf_shader.setUniform(n,texture);
+    //auto texture = surface->internal_surface->get_texture(); //TODO fix this
+    //sf_shader.setUniform(n,texture);
   return false;
 }
 

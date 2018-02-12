@@ -143,6 +143,20 @@ void AnimatedTilePattern::draw(
   tileset_image->draw_region(src, dst_surface, dst);
 }
 
+
+
+TilePattern::UpdaterPtr AnimatedTilePattern::add_vertices(VertexArray& array,
+                                   const Point& dst_position,
+                                   const Tileset&,
+                                   const Point&
+                                                          ) const {
+    Rectangle root_position = position_in_tileset[current_frames[sequence]];
+    Rectangle quad = root_position;
+    quad.set_xy(dst_position);
+    VerticeView view = array.add_quad(quad,root_position,Color::white);
+    return TilePattern::UpdaterPtr(new AnimUpdater(view,*this));
+}
+
 /**
  * \brief Returns whether tiles having this tile pattern are drawn at their
  * position.

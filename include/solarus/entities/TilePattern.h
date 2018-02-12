@@ -21,6 +21,7 @@
 #include "solarus/core/Size.h"
 #include "solarus/entities/Ground.h"
 #include "solarus/graphics/SurfacePtr.h"
+#include "solarus/graphics/VertexArray.h"
 
 namespace Solarus {
 
@@ -40,6 +41,29 @@ class TilePattern {
 
   public:
 
+    struct Updater{
+        virtual void update(const Point& viewport) = 0;
+        virtual ~Updater(){}
+    };
+
+    using UpdaterPtr = std::unique_ptr<Updater>;
+
+    class MultiUpdater : public TilePattern::Updater
+    {
+    public:
+        MultiUpdater(std::vector<TilePattern::UpdaterPtr> updaters):
+            updaters(std::move(updaters)){
+
+        }
+        void update(const Point& viewport) override {
+            for(const auto& u : updaters) {
+                u->update(viewport);
+            }
+        }
+    private:
+        std::vector<TilePattern::UpdaterPtr> updaters;
+    };
+
     virtual ~TilePattern();
 
     int get_width() const;
@@ -56,6 +80,13 @@ class TilePattern {
         const Tileset& tileset,
         const Point& viewport
     ) const;
+
+    UpdaterPtr fill_vertex_array(VertexArray& array,
+            const Rectangle& dst_position,
+            const Tileset& tileset,
+            const Point& viewport
+            , const Size &cell_size) const;
+
 
     /**
      * \brief Draws the tile image on a surface.
@@ -74,6 +105,11 @@ class TilePattern {
     virtual bool is_animated() const;
     virtual bool is_drawn_at_its_position() const;
 
+    virtual UpdaterPtr add_vertices(
+            VertexArray& array,
+            const Point& dst_position,
+            const Tileset& tileset,
+            const Point& viewport) const = 0;
   protected:
 
     TilePattern(Ground ground, const Size& size);

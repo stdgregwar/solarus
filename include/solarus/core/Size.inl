@@ -40,7 +40,14 @@ constexpr Size::Size(int width, int height):
  * @brief convert size to vector2f
  */
 inline Size::operator sf::Vector2f() const {
-    return {width,height};
+    return sf::Vector2f(width,height);
+}
+
+/**
+ * @brief convert size to sf::Vector2u
+ */
+inline Size::operator sf::Vector2u() const {
+    return sf::Vector2u(width,height);
 }
 
 /**

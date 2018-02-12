@@ -23,6 +23,8 @@
 
 namespace Solarus {
 
+class AnimUpdater;
+
 /**
  * \brief Animated tile pattern.
  *
@@ -30,8 +32,23 @@ namespace Solarus {
  * an animated tile pattern displays three frames alternatively.
  */
 class AnimatedTilePattern: public TilePattern {
-
   public:
+    struct AnimUpdater : public TilePattern::Updater {
+        AnimUpdater(const VerticeView& view, const AnimatedTilePattern& pattern):
+            quad(view), pattern(pattern){
+
+        }
+        void update(const Point& viewport) override {
+            const Rectangle& src = pattern.position_in_tileset[pattern.current_frames[pattern.sequence]];
+            //Point dst(quad[0].position.x,quad[0];
+            /*if(parallax) {
+                dst += viewport / ParallaxScrollingTilePattern::ratio;
+            }*/ //TODO take parralax in account
+            quad.update_quad_uvs(src);
+        }
+        VerticeView quad;
+        const AnimatedTilePattern& pattern;
+    };
 
     /**
      * \brief Tile animation sequence mode: 0-1-2 or 0-1-2-1.
@@ -55,6 +72,13 @@ class AnimatedTilePattern: public TilePattern {
         const Tileset& tileset,
         const Point& viewport
     ) const override;
+
+    TilePattern::UpdaterPtr add_vertices(VertexArray& array,
+                                       const Point& dst_position,
+                                       const Tileset&,
+                                       const Point&
+                                       ) const override; //TODO
+
     virtual bool is_drawn_at_its_position() const override;
 
   private:

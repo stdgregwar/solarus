@@ -51,6 +51,17 @@ void SimpleTilePattern::draw(
   tileset_image->draw_region(position_in_tileset, dst_surface, dst_position);
 }
 
+TilePattern::UpdaterPtr SimpleTilePattern::add_vertices(
+        VertexArray& array,
+        const Point& dst_position,
+        const Tileset& /*tileset*/,
+        const Point& /*viewport*/) const {
+    Rectangle quad = position_in_tileset;
+    quad.set_xy(dst_position);
+    array.add_quad(quad,position_in_tileset,Color::white);
+    return nullptr; //Return no updater
+}
+
 /**
  * \brief Returns whether this tile pattern is animated, i.e. not always displayed
  * the same way.

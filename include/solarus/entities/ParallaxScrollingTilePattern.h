@@ -49,6 +49,12 @@ class ParallaxScrollingTilePattern: public SimpleTilePattern {
         const Point& viewport
     ) const override;
 
+    TilePattern::UpdaterPtr add_vertices(VertexArray& array,
+                                       const Point& dst_position,
+                                       const Tileset&,
+                                       const Point&
+                                       ) const override{return nullptr;} //TODO
+
     virtual bool is_animated() const override;
     virtual bool is_drawn_at_its_position() const override;
 
