@@ -116,7 +116,6 @@ class Surface: public Drawable {
     void render(sf::RenderTarget &render_target);
 
     const std::string& get_lua_type_name() const override;
-
   private:
     uint8_t opacity;
     uint32_t get_pixel(int index) const;

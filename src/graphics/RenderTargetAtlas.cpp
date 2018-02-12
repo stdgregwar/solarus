@@ -7,6 +7,9 @@
 namespace Solarus {
 
 
+constexpr unsigned atlas_size = 1024;
+constexpr float inv_size = 1.f / atlas_size;
+
 RenderTargetView::RenderTargetView(Atlas &atlas,
                  const Rectangle& rect,
                  Bin& bin) :
@@ -29,24 +32,34 @@ sf::RenderStates RenderTargetView::prepare_render_states(const sf::RenderStates&
     sf::Transform t;
     t.translate(rect.get_xy());
     sf::RenderStates s = states;
-    s.transform *= t;
+    //s.transform *= t;
     //glEnable(GL_SCISSOR_TEST); //TODO debug this
-    glScissor(rect.get_left(),rect.get_bottom(),rect.get_width(),rect.get_height());
+
+    //glScissor(rect.get_left(),rect.get_bottom(),rect.get_width(),rect.get_height());
+    sf::View v(sf::FloatRect(0,0,rect.get_width(),rect.get_height()));
+    sf::FloatRect vp{
+        rect.get_left() * inv_size,
+        rect.get_top() * inv_size,
+        rect.get_width() * inv_size,
+        rect.get_height() * inv_size
+    };
+    v.setViewport(vp);
+    //v.zoom(0.5);
+    //v.zoom(atlas_size);
+    atlas.back_target.setView(v);
     return s;
 }
 
 void RenderTargetView::draw(const sf::Drawable& drawable,const sf::RenderStates& states) {
     auto s = prepare_render_states(states);
     tex_dirty = true;
-    atlas.target.draw(drawable,s);
-    glDisable(GL_SCISSOR_TEST);
+    atlas.back_target.draw(drawable,s);
 }
 
 void RenderTargetView::draw(const sf::Vertex* vertices, size_t vertexCount,sf::PrimitiveType type,const sf::RenderStates& states) {
     auto s = prepare_render_states(states);
     tex_dirty = true;
-    atlas.target.draw(vertices,vertexCount,type,s);
-    glDisable(GL_SCISSOR_TEST);
+    atlas.back_target.draw(vertices,vertexCount,type,s);
 }
 
 void RenderTargetView::draw_on(SurfaceImpl& target, const Rectangle& region, const Point& dst_position) const {
@@ -60,10 +73,9 @@ void RenderTargetView::draw_on(SurfaceImpl& target, const Rectangle& region, con
 
 const sf::Texture& RenderTargetView::get_texture() const {
     if(tex_dirty) {
-        atlas.target.display();
-        tex_dirty = false;
+        atlas.flush_to_front();
     } //TODO use a back and front buffer to allow self blit!
-    return atlas.target.getTexture();
+    return atlas.front_target.getTexture();
 }
 
 void RenderTargetView::clear() {
@@ -76,7 +88,8 @@ void RenderTargetView::clear_sub(const Rectangle& where) {
     r.setPosition(where.get_top_left());
     sf::RenderStates rs(sf::BlendNone);
     tex_dirty = true;
-    atlas.target.draw(r,rs);
+    atlas.back_target.setView(atlas.back_target.getDefaultView());
+    atlas.back_target.draw(r,rs);
 }
 
 void RenderTargetView::clear(const Rectangle& where) {
@@ -91,7 +104,6 @@ RenderTargetView::~RenderTargetView() {
     atlas.pack.unref(bin);
 }
 
-constexpr unsigned atlas_size = 320;
 
 RenderTargetAtlas::RenderTargetAtlas()
 {

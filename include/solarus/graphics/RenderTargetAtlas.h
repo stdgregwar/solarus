@@ -48,11 +48,19 @@ using RenderTargetViewPtr = std::shared_ptr<RenderTargetView>;
 
 struct Atlas {
     Pack pack;
-    mutable sf::RenderTexture target;
+    mutable sf::RenderTexture back_target;
+    mutable sf::RenderTexture front_target;
     Atlas(unsigned width,unsigned height) : pack(width,height) {
-        if(!target.create(width,height)) {
+        if(!(back_target.create(width,height) && front_target.create(width,height))) {
             //TODO fail gracefully
         }
+    }
+    void flush_to_front() {
+        back_target.display();
+        sf::Sprite s(back_target.getTexture());
+        front_target.clear(sf::Color::Transparent);
+        front_target.draw(s);
+        front_target.display();
     }
 };
 

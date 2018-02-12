@@ -437,6 +437,7 @@ void render(const SurfacePtr& quest_surface) {
     RenderTexture& rt = quest_surface->request_render();
     //sf::Image& img = rt.get_image();
     const sf::Texture& tex = rt.get_texture();
+    //sf::View v = letter_box_view(context.main_window,tex.getSize());//sf::Vector2u(rt.get_width(),rt.get_height()));
     sf::View v = letter_box_view(context.main_window,sf::Vector2u(rt.get_width(),rt.get_height()));
     context.main_window.clear();
     context.main_window.setView(v);
