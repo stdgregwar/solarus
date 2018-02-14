@@ -23,9 +23,6 @@
 #include "solarus/graphics/Drawable.h"
 #include "solarus/graphics/SurfaceImpl.h"
 
-#include <SDL.h>
-#include <SDL_image.h>
-
 #include <SFML/Graphics/RenderTexture.hpp>
 #include <SFML/Graphics/Texture.hpp>
 

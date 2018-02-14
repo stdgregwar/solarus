@@ -43,7 +43,7 @@ class SimpleTilePattern: public TilePattern {
     ) const override;
 
     TilePattern::UpdaterPtr add_vertices(VertexArray& array,
-            const Point& dst_position, const Tileset&, const Point&) const override;
+            const Point& dst_position, const Tileset&, const Rectangle& clip) const override;
 
     virtual bool is_animated() const override;
 

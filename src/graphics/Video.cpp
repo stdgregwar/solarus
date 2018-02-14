@@ -34,7 +34,6 @@
 #include <memory>
 #include <sstream>
 #include <utility>
-#include <SDL_render.h>
 
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
@@ -122,6 +121,7 @@ void create_window() {
               );
 
   context.main_window.setVisible(false);
+  context.main_window.setVerticalSyncEnabled(true);
 
   Debug::check_assertion(context.main_window.isOpen(),
       std::string("Cannot create the window: "));
@@ -582,7 +582,7 @@ void set_fullscreen(bool fullscreen) {
     return;
   }
 
-  Uint32 fullscreen_flag;
+  uint32_t fullscreen_flag;
   if (fullscreen) {
     fullscreen_flag = sf::Style::Fullscreen;
     context.window_size = get_window_size();  // Store the window size before fullscreen.
@@ -617,7 +617,7 @@ bool is_cursor_visible() {
 void set_cursor_visible(bool cursor_visible) {
 
   context.visible_cursor = cursor_visible;
-  SDL_ShowCursor(context.visible_cursor);
+  context.main_window.setMouseCursorVisible(cursor_visible);
   Logger::info(std::string("Cursor visible: ") + (cursor_visible ? "yes" : "no"));
 }
 

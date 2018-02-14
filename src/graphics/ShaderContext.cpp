@@ -24,7 +24,6 @@ namespace Solarus {
 
 namespace {
 
-SDL_GLContext gl_context = nullptr;
 std::string opengl_version;
 std::string shading_language_version;
 std::string opengl_vendor;

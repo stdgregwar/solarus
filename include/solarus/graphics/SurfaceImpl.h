@@ -42,6 +42,7 @@ public:
     const Surface& parent()const;
 
     //virtual  Texture* to_texture() = 0;
+    virtual ~SurfaceImpl();
     virtual  RenderTexture* to_render_texture() = 0;
 private:
     Surface* _parent;

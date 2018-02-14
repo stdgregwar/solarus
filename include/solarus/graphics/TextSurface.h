@@ -23,7 +23,6 @@
 #include "solarus/graphics/Drawable.h"
 #include <map>
 #include <string>
-#include <SDL_ttf.h>
 #include <SFML/Graphics/Text.hpp>
 
 namespace Solarus {
@@ -35,7 +34,6 @@ class Size;
  *
  * This class encapsulates a graphic surface and handles text rendering,
  * horizontal and vertical text alignment, color and other properties.
- * This is the only class related to a font library (SDL_ttf).
  *
  * Two types of fonts are supported:
  * - usual fonts (TTF and other formats are supported),

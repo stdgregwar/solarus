@@ -297,6 +297,7 @@ public:
                 if (waste < best.waste) {
                     best.waste = waste;
                     best.pshelf = &shelf;
+                    best.pfreebin = nullptr; //Keep new spot if new bin is best fit
                 }
             }
         }

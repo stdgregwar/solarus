@@ -508,34 +508,18 @@ void TextSurface::rebuild_ttf() {
 
   // create the text surface
   sf::Font& internal_font = FontResource::get_outline_font(font_id, font_size);
-  /*text_color.get_components(
-      internal_color.r, internal_color.g, internal_color.b, internal_color.a);
-*/
-  /*switch (rendering_mode) {
-
-  case RenderingMode::SOLID:
-    internal_surface = TTF_RenderUTF8_Solid(&internal_font, text.c_str(), internal_color);
-    break;
-
-  case RenderingMode::ANTIALIASING:
-    internal_surface = TTF_RenderUTF8_Blended(&internal_font, text.c_str(), internal_color);
-    break;
-  }*/
 
   sf_text.setCharacterSize(font_size);
   sf_text.setFont(internal_font);
   sf_text.setColor(text_color);
-  //TEST
+
   std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
   std::wstring wide_text = converter.from_bytes(text);
   sf_text.setString(wide_text);
 
-  /*Debug::check_assertion(internal_surface != nullptr,
-      std::string("Cannot create the text surface for string '") + text + "': "
-      + SDL_GetError()
-  );*/
-
-  surface.reset();
+  sf_text.setPosition(1,1);
+  surface = Surface::create(sf_text.getGlobalBounds().width+2,sf_text.getGlobalBounds().height+2);
+  surface->request_render().draw(sf_text);
 }
 
 /**
@@ -550,15 +534,9 @@ void TextSurface::rebuild_ttf() {
  */
 void TextSurface::raw_draw(Surface& dst_surface,
     const Point& dst_position) {
-
   if (surface != nullptr) {
     surface->set_blend_mode(get_blend_mode());
     surface->raw_draw(dst_surface, dst_position + text_position);
-  } else {
-      sf_text.setPosition(dst_position+text_position);
-      //sf::Sprite s(sf_text.getFont()->getTexture(sf_text.getCharacterSize()));
-      //int size = s.getLocalBounds().width;
-      dst_surface.request_render().draw(sf_text);
   }
 }
 
@@ -570,16 +548,11 @@ void TextSurface::raw_draw(Surface& dst_surface,
  */
 void TextSurface::raw_draw_region(const Rectangle& region,
     Surface& dst_surface, const Point& dst_position) {
-
   if (surface != nullptr) {
     surface->set_blend_mode(get_blend_mode());
     surface->raw_draw_region(
         region, dst_surface,
         dst_position + text_position);
-  } else {
-      sf_text.setPosition(dst_position);
-      //TODO use view to crop text
-      dst_surface.request_render().draw(sf_text);
   }
 }
 
@@ -588,7 +561,8 @@ void TextSurface::raw_draw_region(const Rectangle& region,
  * \param transition The transition effect to apply.
  */
 void TextSurface::draw_transition(Transition& transition) {
-    if(surface) transition.draw(*surface); //TODO fix this
+    if(surface)
+        transition.draw(*surface);
 }
 
 /**

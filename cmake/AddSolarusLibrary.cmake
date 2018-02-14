@@ -459,9 +459,6 @@ add_library(solarus
 )
 
 target_link_libraries(solarus
-	"${SDL2_LIBRARY}"
-	"${SDL2_IMAGE_LIBRARY}"
-	"${SDL2_TTF_LIBRARY}"
 	"${SFML_LIBRARIES}"
 	"${SFML_DEPENDENCIES}"
 	"${OPENGL_LIBRARY}"

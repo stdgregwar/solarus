@@ -51,14 +51,17 @@ void SimpleTilePattern::draw(
   tileset_image->draw_region(position_in_tileset, dst_surface, dst_position);
 }
 
-TilePattern::UpdaterPtr SimpleTilePattern::add_vertices(
-        VertexArray& array,
+TilePattern::UpdaterPtr SimpleTilePattern::add_vertices(VertexArray& array,
         const Point& dst_position,
         const Tileset& /*tileset*/,
-        const Point& /*viewport*/) const {
+        const Rectangle & clip) const {
     Rectangle quad = position_in_tileset;
     quad.set_xy(dst_position);
-    array.add_quad(quad,position_in_tileset,Color::white);
+    quad &= clip;
+    Rectangle uvclip = clip;
+    uvclip.add_xy(-dst_position+position_in_tileset.get_xy());
+    Rectangle clipuv = position_in_tileset & uvclip;
+    array.add_quad(quad,clipuv,Color::white);
     return nullptr; //Return no updater
 }
 

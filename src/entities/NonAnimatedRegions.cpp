@@ -33,7 +33,7 @@ constexpr Size cell_size(512,256);
 NonAnimatedRegions::NonAnimatedRegions(Map& map, int layer):
   map(map),
   layer(layer),
-  non_animated_tiles(map.get_size(), Size(512, 256))
+  non_animated_tiles(map.get_size(), cell_size)
 {
 
 }
@@ -44,7 +44,7 @@ NonAnimatedRegions::NonAnimatedRegions(Map& map, int layer):
 void NonAnimatedRegions::add_tile(const TileInfo& tile) {
 
   Debug::check_assertion(optimized_map_cells.empty(),
-      "Tile regions are already built");
+                         "Tile regions are already built");
   Debug::check_assertion(tile.layer == layer, "Wrong layer for add tile");
 
   tiles.push_back(tile);
@@ -60,60 +60,14 @@ void NonAnimatedRegions::add_tile(const TileInfo& tile) {
 void NonAnimatedRegions::build(std::vector<TileInfo>& rejected_tiles) {
 
   Debug::check_assertion(optimized_map_cells.empty(),
-      "Tile regions are already built");
+                         "Tile regions are already built");
 
-  const int map_width8 = map.get_width8();
-  const int map_height8 = map.get_height8();
-
-  // Initialize the are_squares_animated booleans to false.
-  for (int i = 0; i < map_width8 * map_height8; ++i) {
-    are_squares_animated.push_back(false);
-  }
-
-  // Create the surfaces where all non-animated tiles will be drawn.
   optimized_map_cells.resize(non_animated_tiles.get_num_cells());
-
-  // Mark animated 8x8 squares of the map. //TODO wipe all this
-  for (size_t i = 0; i < tiles.size(); ++i) {
-    const TileInfo& tile = tiles[i];
-    if (tile.pattern->is_animated()) {
-      // Animated tile: mark its region as non-optimizable
-      // (otherwise, a non-animated tile above an animated one would screw us).
-
-      int tile_x8 = tile.box.get_x() / 8;
-      int tile_y8 = tile.box.get_y() / 8;
-      int tile_width8 = tile.box.get_width() / 8;
-      int tile_height8 = tile.box.get_height() / 8;
-
-      for (int i = 0; i < tile_height8; i++) {
-        for (int j = 0; j < tile_width8; j++) {
-
-          const int x8 = tile_x8 + j;
-          const int y8 = tile_y8 + i;
-          if (x8 >= 0 && x8 < map_width8 && y8 >= 0 && y8 < map_height8) {
-            int index = y8 * map_width8 + x8;
-            are_squares_animated[index] = true;
-          }
-        }
-      }
-    }
-  }
 
   // Build the list of animated tiles and tiles overlapping them. //TODO wipe this altogether
   for (const TileInfo& tile: tiles) {
-    /*if (!tile.pattern->is_animated()) {
-      non_animated_tiles.add(tile, tile.box);
-      if (overlaps_animated_tile(tile)) {
-        rejected_tiles.push_back(tile);
-      }
-    }
-    else {
-      rejected_tiles.push_back(tile);
-    }*/
     non_animated_tiles.add(tile,tile.box);
   }
-  // No need to keep all tiles at this point.
-  // Just keep the non-animated ones to draw them lazily.
   tiles.clear();
 }
 
@@ -126,39 +80,6 @@ void NonAnimatedRegions::notify_tileset_changed() {
     optimized_map_cells[i].v_array = nullptr;
   }
   // Everything will be redrawn when necessary.
-}
-
-/**
- * \brief Returns whether a tile is overlapping an animated other tile.
- * \param tile The tile to check.
- * \return \c true if this tile is overlapping an animated tile.
- */
-bool NonAnimatedRegions::overlaps_animated_tile(const TileInfo& tile) const {
-
-  if (tile.layer != layer) {
-    return false;
-  }
-
-  int tile_x8 = tile.box.get_x() / 8;
-  int tile_y8 = tile.box.get_y() / 8;
-  int tile_width8 = tile.box.get_width() / 8;
-  int tile_height8 = tile.box.get_height() / 8;
-
-  for (int i = 0; i < tile_height8; i++) {
-    for (int j = 0; j < tile_width8; j++) {
-
-      int x8 = tile_x8 + j;
-      int y8 = tile_y8 + i;
-      if (x8 >= 0 && x8 < map.get_width8() && y8 >= 0 && y8 < map.get_height8()) {
-
-        int index = y8 * map.get_width8() + x8;
-        if (are_squares_animated[index]) {
-          return true;
-        }
-      }
-    }
-  }
-  return false;
 }
 
 /**
@@ -205,19 +126,19 @@ void NonAnimatedRegions::draw_on_map() {
       }
 
       const Point cell_xy = {
-          j * cell_size.width,
-          i * cell_size.height
+        j * cell_size.width,
+        i * cell_size.height
       };
 
       const Point dst_position = cell_xy - camera_position.get_xy();
       //Update cell content
       if(optimized_map_cells[cell_index].updater)
-          optimized_map_cells[cell_index].updater->update(camera_position.get_xy());
+        optimized_map_cells[cell_index].updater->update(camera_position.get_xy());
 
       //Draw vertex array corresponding to cell
       optimized_map_cells[cell_index].v_array->draw(
-          map.get_camera_surface(), dst_position, map.get_tileset().get_tiles_image()
-      );
+            map.get_camera_surface(), dst_position, map.get_tileset().get_tiles_image()
+            );
     }
   }
 }
@@ -227,14 +148,13 @@ void NonAnimatedRegions::draw_on_map() {
  * \param cell_index Index of the cell to draw.
  */
 void NonAnimatedRegions::build_cell(int cell_index) {
-
   Debug::check_assertion(
-      cell_index >= 0 && (size_t) cell_index < non_animated_tiles.get_num_cells(),
-      "Wrong cell index"
-  );
+        cell_index >= 0 && (size_t) cell_index < non_animated_tiles.get_num_cells(),
+        "Wrong cell index"
+        );
   Debug::check_assertion(optimized_map_cells[cell_index].v_array == nullptr,
-      "This cell is already built"
-  );
+                         "This cell is already built"
+                         );
 
   const int row = cell_index / non_animated_tiles.get_num_columns();
   const int column = cell_index % non_animated_tiles.get_num_columns();
@@ -242,16 +162,13 @@ void NonAnimatedRegions::build_cell(int cell_index) {
   // Position of this cell on the map.
   const Size cell_size = non_animated_tiles.get_cell_size();
   const Point cell_xy = {
-      column * cell_size.width,
-      row * cell_size.height
+    column * cell_size.width,
+    row * cell_size.height
   };
 
-  //SurfacePtr cell_surface = Surface::create(cell_size);
+  //Create vertex array for this particular cell
   VertexArrayPtr cell_array = VertexArray::create(Triangles);
-  //optimized_tiles_surfaces[cell_index] = cell_surface;
   optimized_map_cells[cell_index].v_array = cell_array;
-  // Let this surface as a software destination because it is built only
-  // once (here) and never changes later.
 
   const std::vector<TileInfo>& tiles_in_cell =
       non_animated_tiles.get_elements(cell_index);
@@ -261,58 +178,25 @@ void NonAnimatedRegions::build_cell(int cell_index) {
   for (const TileInfo& tile: tiles_in_cell) {
 
     Rectangle dst_position(
-        tile.box.get_x() - cell_xy.x,
-        tile.box.get_y() - cell_xy.y,
-        tile.box.get_width(),
-        tile.box.get_height()
-    );
+          tile.box.get_x() - cell_xy.x,
+          tile.box.get_y() - cell_xy.y,
+          tile.box.get_width(),
+          tile.box.get_height()
+          );
 
-    /*tile.pattern->fill_surface(
-        cell_surface,
-        dst_position,
-        map.get_tileset(),
-        cell_xy
-    );*/
     auto u = tile.pattern->fill_vertex_array(
-                *cell_array,
-                dst_position,
-                map.get_tileset(),
-                cell_xy,
-                cell_size
-                );
+          *cell_array,
+          dst_position,
+          map.get_tileset(),
+          cell_xy,
+          cell_size
+          );
     if(u) updaters.emplace_back(std::move(u));
   }
 
   if(!updaters.empty()) {
-      optimized_map_cells[cell_index].updater.reset(new TilePattern::MultiUpdater(std::move(updaters)));
+    optimized_map_cells[cell_index].updater.reset(new TilePattern::MultiUpdater(std::move(updaters)));
   }
-
-  // Remember that non-animated tiles are drawn after animated ones.
-  // We may have drawn too much.
-  // We have to make sure we don't exceed the non-animated regions.
-  // Erase 8x8 squares that contain animated tiles.
-  /*for (int y = cell_xy.y; y < cell_xy.y + cell_size.height; y += 8) {
-    if (y >= map.get_height()) {  // The last cell might exceed the map border.
-      continue;
-    }
-    for (int x = cell_xy.x; x < cell_xy.x + cell_size.width; x += 8) {
-      if (x >= map.get_width()) {
-        continue;
-      }
-
-      int square_index = (y / 8) * map.get_width8() + (x / 8);
-
-      if (are_squares_animated[square_index]) {
-        Rectangle animated_square(
-            x - cell_xy.x,
-            y - cell_xy.y,
-            8,
-            8
-        );
-        cell_surface->clear(animated_square);
-      }
-    }
-  }*/
 }
 
 }

@@ -25,18 +25,18 @@ public:
     RenderTargetView(Atlas& atlas,
                      const Rectangle& rect,
                      Bin& bi);
-    sf::RenderStates prepare_render_states(const sf::RenderStates& states);
+    void setup_viewport();
     void draw(const sf::Drawable&drawable, const sf::RenderStates& states=sf::RenderStates::Default);
     void draw(const sf::Vertex* vertices, size_t vertexCount,sf::PrimitiveType type,const sf::RenderStates& states =sf::RenderStates::Default);
     int get_width() const;
     int get_height() const;
     const sf::Texture& get_texture() const;
-    void draw_on(Solarus::SurfaceImpl &target, const Rectangle& region, const Point& dst_position) const;
-    void clear();
-    void clear(const Rectangle& where);
+    void draw_on(Solarus::SurfaceImpl &target, const Rectangle& region, const Point& dst_position, uint8_t opacity = 255) const;
+    void clear(const sf::Color &clearColor = sf::Color::Transparent);
+    void clear(const Rectangle& where,const sf::Color& clearColor = sf::Color::Transparent);
     ~RenderTargetView();
 private:
-    void clear_sub(const Rectangle& where);
+    void clear_sub(const Rectangle& where, const sf::Color &clearColor);
     Rectangle rect;
     Bin& bin;
     Atlas& atlas;
@@ -44,7 +44,7 @@ private:
     mutable sf::Sprite sprite;
 };
 
-using RenderTargetViewPtr = std::shared_ptr<RenderTargetView>;
+using RenderTargetViewPtr = std::unique_ptr<RenderTargetView>;
 
 struct Atlas {
     Pack pack;

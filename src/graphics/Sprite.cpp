@@ -859,7 +859,6 @@ void Sprite::raw_draw_region(
  * \param transition The transition effect to apply.
  */
 void Sprite::draw_transition(Transition& transition) {
-
   transition.draw(get_intermediate_surface());
 }
 

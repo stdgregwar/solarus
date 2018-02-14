@@ -19,7 +19,6 @@
 #include "solarus/core/Logger.h"
 #include "solarus/core/Rectangle.h"
 #include "solarus/graphics/Video.h"
-#include <SDL.h>
 #include <cstdlib>  // std::abs
 #include <codecvt>
 
@@ -35,13 +34,8 @@ const InputEvent::KeyboardKey InputEvent::directional_keys[] = {
 
 bool InputEvent::initialized = false;
 bool InputEvent::joypad_enabled = false;
-SDL_Joystick* InputEvent::joystick = nullptr;
 bool InputEvent::repeat_keyboard = false;
-std::set<sf::Keyboard::Key> InputEvent::keys_pressed;
 std::queue<sf::Event> InputEvent::simulated_events;
-// Default the axis states to centered
-std::vector<int> InputEvent::joypad_axis_state;
-
 // Keyboard key names.
 const std::string EnumInfoTraits<InputEvent::KeyboardKey>::pretty_name = "keyboard key";
 
@@ -204,17 +198,8 @@ void InputEvent::initialize() {
  * \brief Quits the input event manager.
  */
 void InputEvent::quit() {
-
-  if (joystick != nullptr) {
-    SDL_JoystickClose(joystick);
-  }
-  SDL_StopTextInput();
-
   joypad_enabled = false;
-  joystick = nullptr;
   repeat_keyboard = false;
-  keys_pressed.clear();
-  joypad_axis_state.clear();
   initialized = false;
 }
 
@@ -248,62 +233,6 @@ std::unique_ptr<InputEvent> InputEvent::get_event(sf::Window& window) {
   InputEvent* result = nullptr;
   sf::Event internal_event;
   if (window.pollEvent(internal_event)) {
-
-    // If this is a joypad axis event
-    if (internal_event.type == sf::Event::JoystickMoved) {
-      // Determine the current state of the axis
-      sf::Joystick::Axis axis = internal_event.joystickMove.axis;
-      int value = internal_event.joystickMove.position;
-      int joystick_deadzone = 8000;
-      if (axis == sf::Joystick::Axis::X) {  // X axis
-        int x_dir = 0;
-        if (value < -joystick_deadzone) {
-          // Left of dead zone
-          x_dir = -1;
-        } else if(value > joystick_deadzone) {
-          // Right of dead zone
-          x_dir =  1;
-        } else {
-          x_dir = 0;
-        }
-        joypad_axis_state[axis] = x_dir;
-      } else if (axis == sf::Joystick::Axis::Y) {  // Y axis
-        int y_dir = 0;
-        if (value < -joystick_deadzone) {
-          // Below dead zone
-          y_dir = -1;
-        } else if(value > joystick_deadzone) {
-          // Above dead zone
-          y_dir =  1;
-        } else {
-          y_dir = 0;
-        }
-        joypad_axis_state[axis] = y_dir;
-      }
-    }
-
-    // Check if keyboard events are correct.
-    // For some reason, when running Solarus from a Qt application
-    // (which is not recommended)
-    // multiple SDL_KEYUP events are generated when a key remains pressed
-    // (Qt/SDL conflict). This fixes most problems but not all of them.
-    else if (internal_event.type == sf::Event::KeyPressed) {
-      sf::Keyboard::Key key = internal_event.key.code;
-      if (!keys_pressed.insert(key).second) {
-        // Already known as pressed: mark repeated.
-        //internal_event.key.repeat = 1; //TODO check if SFML repeat event too
-      }
-    }
-    else if (internal_event.type == sf::Event::KeyReleased) {
-      sf::Keyboard::Key key = internal_event.key.code;
-      if (keys_pressed.erase(key) == 0) {
-        // Already known as not pressed: mark repeated.
-        //internal_event.key.repeat = 1;
-      }
-    }
-
-    // Always return a Solarus event if an SDL event occurred, so that
-    // multiple SDL events in the same frame are all treated.
     result = new InputEvent(internal_event);
   } else if (!simulated_events.empty()){ //else take simulated events
     internal_event = simulated_events.front();
@@ -339,9 +268,7 @@ void InputEvent::set_key_repeat(bool repeat) {
  * \return true if the SHIFT key is currently down
  */
 bool InputEvent::is_shift_down() {
-
-  SDL_Keymod mod = SDL_GetModState();
-  return mod & KMOD_SHIFT;
+  return sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) or sf::Keyboard::isKeyPressed(sf::Keyboard::RShift);
 }
 
 /**
@@ -352,9 +279,7 @@ bool InputEvent::is_shift_down() {
  * \return true if the CTRL key is currently down
  */
 bool InputEvent::is_control_down() {
-
-  SDL_Keymod mod = SDL_GetModState();
-  return mod & KMOD_CTRL;
+    return sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) or sf::Keyboard::isKeyPressed(sf::Keyboard::RControl);
 }
 
 /**
@@ -366,8 +291,7 @@ bool InputEvent::is_control_down() {
  */
 bool InputEvent::is_alt_down() {
 
-  SDL_Keymod mod = SDL_GetModState();
-  return mod & KMOD_ALT;
+  return sf::Keyboard::isKeyPressed(sf::Keyboard::RAlt) or sf::Keyboard::isKeyPressed(sf::Keyboard::LAlt);
 }
 
 /**
@@ -375,9 +299,7 @@ bool InputEvent::is_alt_down() {
  * \return \c true if the caps lock key is currently active.
  */
 bool InputEvent::is_caps_lock_on() {
-
-  SDL_Keymod mod = SDL_GetModState();
-  return mod & KMOD_CAPS;
+  return false;
 }
 
 /**
@@ -385,9 +307,7 @@ bool InputEvent::is_caps_lock_on() {
  * \return \c true if the num lock key is currently active.
  */
 bool InputEvent::is_num_lock_on() {
-
-  SDL_Keymod mod = SDL_GetModState();
-  return mod & KMOD_NUM;
+  return false; //TODO fix this, or not
 }
 
 /**
@@ -396,11 +316,7 @@ bool InputEvent::is_num_lock_on() {
  * \return \c true if this keyboard key is currently down.
  */
 bool InputEvent::is_key_down(KeyboardKey key) {
-
-  int num_keys = 0;
-  const Uint8* keys_state = SDL_GetKeyboardState(&num_keys);
-  SDL_Scancode scan_code = SDL_GetScancodeFromKey(SDL_Keycode(key));
-  return keys_state[scan_code];
+ return sf::Keyboard::isKeyPressed((sf::Keyboard::Key)key);
 }
 
 /**
@@ -409,12 +325,7 @@ bool InputEvent::is_key_down(KeyboardKey key) {
  * \return \c true if this joypad button is currently down.
  */
 bool InputEvent::is_joypad_button_down(int button) {
-
-  if (joystick == nullptr) {
-    return false;
-  }
-
-  return SDL_JoystickGetButton(joystick, button) != 0;
+    sf::Joystick::isButtonPressed(0,button);
 }
 
 /**
@@ -423,8 +334,7 @@ bool InputEvent::is_joypad_button_down(int button) {
  * \return \c true if this mouse button is currently down.
  */
 bool InputEvent::is_mouse_button_down(MouseButton button) {
-
-  return (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON(static_cast<int>(button))) != 0;
+  return sf::Mouse::isButtonPressed((sf::Mouse::Button)button);
 }
 
 /**
@@ -433,14 +343,8 @@ bool InputEvent::is_mouse_button_down(MouseButton button) {
  * \return \c true if this finger is currently down.
  */
 bool InputEvent::is_finger_down(int finger_id) {
-
-  for (int i = 0; i < SDL_GetNumTouchDevices(); ++i) {
-    if (SDL_GetTouchFinger(SDL_GetTouchDevice(i), finger_id) != NULL) {
-      return true;
-    }
-  }
-
-  return false;
+  //return sf::Touch::isDown(finger_id);
+    return false;
 }
 
 /**
@@ -450,12 +354,7 @@ bool InputEvent::is_finger_down(int finger_id) {
  * -1 (left or up), 0 (centered) or 1 (right or down).
  */
 int InputEvent::get_joypad_axis_state(int axis) {
-
-  if (joystick == nullptr) {
-    return 0;
-  }
-
-  int state = SDL_JoystickGetAxis(joystick, axis);
+  int state = sf::Joystick::getAxisPosition(0,(sf::Joystick::Axis)axis);
 
   int result;
   if (std::abs(state) < 10000) {
@@ -475,50 +374,15 @@ int InputEvent::get_joypad_axis_state(int axis) {
  */
 int InputEvent::get_joypad_hat_direction(int hat) {
 
-  if (joystick == nullptr) {
-    return -1;
-  }
+  int x = InputEvent::get_joypad_axis_state(sf::Joystick::PovX);
+  int y = InputEvent::get_joypad_axis_state(sf::Joystick::PovY);
 
-  int state = SDL_JoystickGetHat(joystick, hat);
-  int result = -1;
-
-  switch (state) {
-
-    case SDL_HAT_RIGHT:
-      result = 0;
-      break;
-
-    case SDL_HAT_RIGHTUP:
-      result = 1;
-      break;
-
-    case SDL_HAT_UP:
-      result = 2;
-      break;
-
-    case SDL_HAT_LEFTUP:
-      result = 3;
-      break;
-
-    case SDL_HAT_LEFT:
-      result = 4;
-      break;
-
-    case SDL_HAT_LEFTDOWN:
-      result = 5;
-      break;
-
-    case SDL_HAT_DOWN:
-      result = 6;
-      break;
-
-    case SDL_HAT_RIGHTDOWN:
-      result = 7;
-      break;
-
-  }
-
-  return result;
+  int directions[3][3] = {
+    {5,6,7},
+    {4,-1,0},
+    {3,2,1}
+  };
+  return directions[x+1][y+1];
 }
 
 /**
@@ -527,12 +391,8 @@ int InputEvent::get_joypad_hat_direction(int hat) {
  * \return The mouse position in quest coordinates.
  */
 Point InputEvent::get_global_mouse_position() {
-
-  int x, y;
-
-  SDL_GetMouseState(&x, &y);
-
-  return Video::window_to_quest_coordinates(Point(x, y));
+  auto p = sf::Mouse::getPosition();
+  return Video::window_to_quest_coordinates(Point(p.x, p.y));
 }
 
 /**
@@ -543,23 +403,7 @@ Point InputEvent::get_global_mouse_position() {
  * \return \c false if the finger is not pressed.
  */
 bool InputEvent::get_global_finger_position(int finger_id, Point& finger_xy) {
-
-  SDL_Finger* finger;
-
-  for (int i = 0; i < SDL_GetNumTouchDevices(); ++i) {
-    finger = SDL_GetTouchFinger(SDL_GetTouchDevice(i), finger_id);
-
-    if (finger != NULL) {
-      const Size window_size = Video::get_window_size();
-      const int x = finger->x * static_cast<float>(window_size.width);
-      const int y = finger->y * static_cast<float>(window_size.height);
-
-      finger_xy = Video::window_to_quest_coordinates(Point(x, y));
-      return true;
-    }
-  }
-
-  return false;
+  return false; //TODO
 }
 
 /**
@@ -569,19 +413,7 @@ bool InputEvent::get_global_finger_position(int finger_id, Point& finger_xy) {
  * \return \c false if the finger is not pressed.
  */
 bool InputEvent::get_global_finger_pressure(int finger_id, float& finger_pressure) {
-
-  SDL_Finger* finger;
-
-  for (int i = 0; i < SDL_GetNumTouchDevices(); ++i) {
-    finger = SDL_GetTouchFinger(SDL_GetTouchDevice(i), finger_id);
-
-    if (finger != NULL) {
-      finger_pressure = finger->pressure;
-      return true;
-    }
-  }
-
-  return false;
+  return false;//TODO
 }
 
 
@@ -592,7 +424,6 @@ bool InputEvent::get_global_finger_pressure(int finger_id, float& finger_pressur
  * \return \c false if this object represents no event.
  */
 bool InputEvent::is_valid() const {
-  //return internal_event.type == SDL_LASTEVENT;
     return true; //TODO check if it is the case
 }
 
@@ -913,25 +744,7 @@ bool InputEvent::is_joypad_enabled() {
 void InputEvent::set_joypad_enabled(bool joypad_enabled) {
 
   if (joypad_enabled != is_joypad_enabled()) {
-
     InputEvent::joypad_enabled = joypad_enabled;
-
-    if (joystick != nullptr) {
-      SDL_JoystickClose(joystick);
-      joystick = nullptr;
-      joypad_axis_state.clear();
-    }
-
-    if (joypad_enabled && SDL_NumJoysticks() > 0) {
-        SDL_InitSubSystem(SDL_INIT_JOYSTICK);
-        joystick = SDL_JoystickOpen(0);
-        joypad_axis_state.assign(SDL_JoystickNumAxes(joystick), 0);
-    }
-    else {
-      SDL_JoystickEventState(SDL_IGNORE);
-      SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
-    }
-
     Logger::info(std::string("Joypad support enabled: ") + (joypad_enabled ? "true" : "false"));
   }
 }

@@ -54,6 +54,18 @@ void ParallaxScrollingTilePattern::draw(
   // one day, we can implement several scrolling layers just by changing the ratio
 }
 
+TilePattern::UpdaterPtr ParallaxScrollingTilePattern::add_vertices(VertexArray& array,
+                                   const Point& dst_position,
+                                   const Tileset&,
+                                   const Rectangle &clip
+                                   ) const {
+    Rectangle quad = position_in_tileset;
+    quad.set_xy(dst_position);
+    VerticeView v = array.add_quad(quad,position_in_tileset,Color::white);
+    return TilePattern::UpdaterPtr(
+                new ParralaxUpdater(v,dst_position));
+}
+
 /**
  * \brief Returns whether this tile pattern is animated, i.e. not always displayed
  * the same way.
@@ -66,6 +78,8 @@ void ParallaxScrollingTilePattern::draw(
 bool ParallaxScrollingTilePattern::is_animated() const {
   return true;
 }
+
+
 
 /**
  * \brief Returns whether tiles having this tile pattern are drawn at their

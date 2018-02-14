@@ -32,12 +32,15 @@ public:
     VerticeView(VertexArray& array, off_t offset, size_t size):
         array(array),offset(offset),size(size){}
 
-    //TODO add utility methods here
     void update_quad_uvs(const Rectangle& uvs);
+    void update_quad_position(const Point& position);
+    void update_quad_positions(const Rectangle& pos);
+    void set_4quad_offset(const Rectangle& targetQuad,const Point& offset, const Rectangle& uvs);
     inline Vertex& operator [](size_t index);
     Vertex& at(size_t index);
     const Vertex& at(size_t index) const;
     inline const Vertex& operator [](size_t index) const;
+    VerticeView sub_view(off_t offset) const;
     size_t get_size() const;
 private:
     VertexArray& array;
@@ -58,6 +61,7 @@ public:
     const Vertex* data() const;
     void add_vertex(const Vertex& v);
     VerticeView add_quad(const Rectangle& rect, const Rectangle& uvs, const Color &color);
+    VerticeView make_view(size_t size);
     size_t vertex_count() const;
     Vertex& operator [](size_t index);
     void draw(const SurfacePtr &dst_surface, const Point& dst_position, const SurfacePtr &texture) const;

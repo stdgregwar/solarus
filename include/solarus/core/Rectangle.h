@@ -21,7 +21,6 @@
 #include "solarus/core/Point.h"
 #include "solarus/core/Size.h"
 
-#include <SDL_rect.h>
 #include <SFML/Graphics/Rect.hpp>
 
 #include <iosfwd>
@@ -42,7 +41,9 @@ class Rectangle {
   friend class Surface;
 
   public:
-
+  struct _rect {
+    int x,y,w,h;
+  };
     constexpr Rectangle();
     constexpr Rectangle(int x, int y);
     explicit constexpr Rectangle(const Point& xy);
@@ -103,11 +104,7 @@ class Rectangle {
     operator sf::IntRect()const;
     operator sf::FloatRect()const;
   private:
-
-    SDL_Rect* get_internal_rect();
-    const SDL_Rect* get_internal_rect() const;
-
-    SDL_Rect rect;      /**< The SDL_Rect encapsulated. */
+    _rect rect;      /**< The Litteral rect encapsulated. */
 
 };
 

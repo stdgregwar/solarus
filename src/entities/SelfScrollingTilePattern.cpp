@@ -102,6 +102,25 @@ void SelfScrollingTilePattern::draw(
   tileset_image->draw_region(src, dst_surface, dst);
 }
 
+TilePattern::UpdaterPtr SelfScrollingTilePattern::add_vertices(VertexArray& array,
+                                   const Point& dst_position,
+                                   const Tileset&,
+                                   const Rectangle &clip
+                                   ) const {
+    Rectangle base_position = position_in_tileset;
+    base_position.set_xy(dst_position);
+    Rectangle quad = base_position;
+    for(int i = 0; i < 4; ++i) {
+        array.add_quad(quad,position_in_tileset,Color::white);
+        array.add_quad(quad,position_in_tileset,Color::white);
+        array.add_quad(quad,position_in_tileset,Color::white);
+        array.add_quad(quad,position_in_tileset,Color::white);
+    }
+    VerticeView v = array.make_view(24);
+    return TilePattern::UpdaterPtr(
+                new SelfScrollUpdater(v,*this,base_position));
+}
+
 /**
  * \brief Returns whether this tile pattern is animated, i.e. not always displayed
  * the same way.

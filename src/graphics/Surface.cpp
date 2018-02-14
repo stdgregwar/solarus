@@ -51,12 +51,7 @@ Surface::Surface(int width, int height):
       "Attempt to create a surface with an empty size");
 
   internal_surface.reset(new RenderTexture(width,height));
-
   internal_surface->_parent = this;
-
-  Debug::check_assertion(internal_surface != nullptr,
-      std::string("Failed to create SDL surface: ") + SDL_GetError());
-
 }
 
 Surface::Surface(const sf::Image& img)
@@ -87,7 +82,7 @@ Surface::Surface(SurfaceImpl* impl):
  * \brief Destructor.
  */
 Surface::~Surface() {
-
+    internal_surface.reset();
 }
 
 
@@ -239,7 +234,7 @@ std::string Surface::get_pixels() const {
  */
 void Surface::set_pixels(const std::string& buffer) {
     //TODO notify pixels changed
-    internal_surface->get_image().create(get_width(),get_height(),reinterpret_cast<const Uint8*>(buffer.data()));
+    internal_surface->get_image().create(get_width(),get_height(),reinterpret_cast<const uint8_t*>(buffer.data()));
 }
 
 RenderTexture &Surface::request_render() {

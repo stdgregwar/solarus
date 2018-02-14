@@ -19,6 +19,7 @@
 
 #include "solarus/core/Common.h"
 #include "solarus/entities/SimpleTilePattern.h"
+#include "solarus/entities/ParallaxScrollingTilePattern.h"
 
 namespace Solarus {
 
@@ -37,6 +38,24 @@ namespace Solarus {
 class SelfScrollingTilePattern: public SimpleTilePattern {
 
   public:
+    struct SelfScrollUpdater : public TilePattern::Updater {
+        SelfScrollUpdater(const VerticeView& view, const SelfScrollingTilePattern& pattern,const Rectangle& base_position):
+            quad(view), pattern(pattern), base_position(base_position) {
+
+        }
+        void update(const Point& viewport) override {
+            Point offset = viewport / ParallaxScrollingTilePattern::ratio;
+            int x_mod = offset.x % base_position.get_width();
+            offset.x = x_mod < 0 ? x_mod + base_position.get_width() : x_mod;
+            int y_mod = offset.y % base_position.get_height();
+            offset.y = y_mod < 0 ? y_mod + base_position.get_height() : y_mod;
+            //offset-=Point(base_position.get_width(),base_position.get_height());
+            quad.set_4quad_offset(base_position,offset,pattern.position_in_tileset);
+        }
+        VerticeView quad;
+        const SelfScrollingTilePattern& pattern;
+        const Rectangle base_position;
+    };
 
     SelfScrollingTilePattern(Ground ground, const Point& xy, const Size& size);
 
@@ -50,8 +69,8 @@ class SelfScrollingTilePattern: public SimpleTilePattern {
     TilePattern::UpdaterPtr add_vertices(VertexArray& array,
                                        const Point& dst_position,
                                        const Tileset&,
-                                       const Point&
-                                       ) const override{return nullptr;} //TODO
+                                        const Rectangle& clip
+                                       ) const override; //TODO
 
     virtual bool is_animated() const override;
 

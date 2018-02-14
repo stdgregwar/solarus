@@ -198,6 +198,8 @@ TilePattern::UpdaterPtr TilePattern::fill_vertex_array(
     int limit_y = dst_position.get_y() + dst_position.get_height();
 
     std::vector<TilePattern::UpdaterPtr> updaters;
+    Rectangle mask(Point(0,0),cell_size);
+
 
     for (int y = dst_position.get_y();
         y < limit_y;
@@ -215,7 +217,7 @@ TilePattern::UpdaterPtr TilePattern::fill_vertex_array(
               || !is_drawn_at_its_position()) {
             dst.x = x;
             //draw(dst_surface, dst, tileset, viewport);
-            auto u = add_vertices(array,dst,tileset,viewport);
+            auto u = add_vertices(array,dst,tileset,mask);
             if(u){
                 updaters.emplace_back(std::move(u));
             }

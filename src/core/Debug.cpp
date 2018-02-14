@@ -18,7 +18,6 @@
 #include "solarus/core/Logger.h"
 #include "solarus/core/SolarusFatal.h"
 #include <cstdlib>  // std::abort
-#include <SDL_messagebox.h>
 
 namespace Solarus {
 namespace Debug {
@@ -126,12 +125,12 @@ void SOLARUS_API die(const std::string& error_message) {
   Logger::fatal(error_message);
 
   if (show_popup_on_die) {
-    SDL_ShowSimpleMessageBox(
+    /*SDL_ShowSimpleMessageBox( //TODO replace by a sf::WINDOW
         SDL_MESSAGEBOX_ERROR,
         "Error",
         error_message.c_str(),
         nullptr
-    );
+    );*/
   }
 
   if (abort_on_die) {

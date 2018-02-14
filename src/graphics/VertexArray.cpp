@@ -19,6 +19,72 @@ const Vertex& VerticeView::at(size_t index) const {
     return (*this)[index];
 }
 
+void VerticeView::set_4quad_offset(const Rectangle& targetQuad,const Point& offset, const Rectangle& uvs) {
+    VerticeView& tlq = *this; //All 4 quads as views
+    VerticeView blq = sub_view(6);
+    VerticeView brq = sub_view(12);
+    VerticeView trq = sub_view(18);
+
+    {
+        Rectangle moved = targetQuad;
+        Rectangle clamped;
+        moved.add_xy(offset);
+        clamped = moved & targetQuad;
+        tlq.update_quad_positions(clamped);
+
+        Rectangle uvmask = uvs;
+        uvmask.add_xy(-offset);
+        Rectangle newv = uvs & uvmask;
+        tlq.update_quad_uvs(newv);
+    }
+    {
+        Rectangle moved = targetQuad;
+        Rectangle clamped;
+        moved.add_xy(offset);
+        moved.add_y(-targetQuad.get_height());
+        clamped = moved & targetQuad;
+        blq.update_quad_positions(clamped);
+
+        Rectangle uvmask = uvs;
+        uvmask.add_xy(-offset);
+        uvmask.add_y(uvs.get_height());
+        Rectangle newv = uvs & uvmask;
+        blq.update_quad_uvs(newv);
+    }
+    {
+        Rectangle moved = targetQuad;
+        Rectangle clamped;
+        moved.add_xy(offset);
+        moved.add_xy(-targetQuad.get_size().width,-targetQuad.get_size().height);
+        clamped = moved & targetQuad;
+        brq.update_quad_positions(clamped);
+
+        Rectangle uvmask = uvs;
+        uvmask.add_xy(-offset);
+        uvmask.add_xy(uvs.get_size().width,uvs.get_size().height);
+        Rectangle newv = uvs & uvmask;
+        brq.update_quad_uvs(newv);
+    }
+    {
+        Rectangle moved = targetQuad;
+        Rectangle clamped;
+        moved.add_xy(offset);
+        moved.add_x(-targetQuad.get_width());
+        clamped = moved & targetQuad;
+        trq.update_quad_positions(clamped);
+
+        Rectangle uvmask = uvs;
+        uvmask.add_xy(-offset);
+        uvmask.add_x(uvs.get_width());
+        Rectangle newv = uvs & uvmask;
+        trq.update_quad_uvs(newv);
+    }
+}
+
+VerticeView VerticeView::sub_view(off_t a_offset) const {
+    return VerticeView(array,offset+a_offset,size-a_offset);
+}
+
 void VerticeView::update_quad_uvs(const Rectangle& uvs) {
     sf::Vector2f u1 = uvs.get_top_left();
     sf::Vector2f u2 = uvs.get_bottom_left();
@@ -30,6 +96,28 @@ void VerticeView::update_quad_uvs(const Rectangle& uvs) {
     at(3).texCoords = u3;
     at(4).texCoords = u4;
     at(5).texCoords = u1;
+}
+
+void VerticeView::update_quad_positions(const Rectangle& pos)
+{
+    sf::Vector2f v1 = pos.get_top_left();
+    sf::Vector2f v2 = pos.get_bottom_left();
+    sf::Vector2f v3 = pos.get_bottom_right();
+    sf::Vector2f v4 = pos.get_top_right();
+    at(0).position = v1;
+    at(1).position = v2;
+    at(2).position = v3;
+    at(3).position = v3;
+    at(4).position = v4;
+    at(5).position = v1;
+}
+
+void VerticeView::update_quad_position(const Point& position) {
+    sf::Vector2f old = at(0).position;
+    sf::Vector2f diff = (sf::Vector2f)position - old;
+    for(int i = 0; i < 6; i++) {
+        at(i).position += diff;
+    }
 }
 
 size_t VerticeView::get_size() const {return size;}
@@ -85,8 +173,13 @@ VerticeView VertexArray::add_quad(const Rectangle& rect, const Rectangle& uvs, c
     add_vertex(v3);
     add_vertex(v4);
     add_vertex(v1);
-    return VerticeView(*this,vertices.size()-6,6);
+    return make_view(6);
 }
+
+VerticeView VertexArray::make_view(size_t size) {
+    return VerticeView(*this,vertex_count()-size,size);
+}
+
 const Vertex* VertexArray::data() const {
     return vertices.data();
 }

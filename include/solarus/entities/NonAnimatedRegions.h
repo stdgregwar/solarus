@@ -43,7 +43,6 @@ class NonAnimatedRegions {
   public:
 
     NonAnimatedRegions(Map& map, int layer);
-
     void add_tile(const TileInfo& tile);
     void build(std::vector<TileInfo>& rejected_tiles);
     void notify_tileset_changed();
@@ -63,19 +62,14 @@ class NonAnimatedRegions {
     std::vector<TileInfo>
         tiles;                              /**< All tiles contained in this layer and candidates to
                                              * be optimized. This list is cleared after build() is called. */
-    std::vector<bool> are_squares_animated; /**< Whether each 8x8 square of the map has animated tiles. */
 
     // Handle the lazy drawing.
     Grid<TileInfo>
         non_animated_tiles;                 /**< All non-animated tiles. Stored in a grid so that
                                              * we can quickly find the ones to draw lazily later when the
                                              * camera moves. */
-    //std::vector<SurfacePtr>
-        /*optimized_tiles_surfaces;           /**< All non-animated tiles are drawn here once for all
-                                             * for performance. Each cell of the grid has a surface
-                                             * or nullptr before it is drawn. */
     std::vector<MapCell>
-        optimized_map_cells;              /**< All static tiles are put here once for all for performance
+        optimized_map_cells;                 /**< All static tiles are put here once for all for performance
                                               * Each cell of the grid has a VertexArray. With type points
                                               * when uninitialized*/
 

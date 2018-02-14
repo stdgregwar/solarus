@@ -109,7 +109,7 @@ class TilePattern {
             VertexArray& array,
             const Point& dst_position,
             const Tileset& tileset,
-            const Point& viewport) const = 0;
+            const Rectangle& clip) const = 0;
   protected:
 
     TilePattern(Ground ground, const Size& size);

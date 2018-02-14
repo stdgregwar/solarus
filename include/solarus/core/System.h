@@ -49,7 +49,7 @@ class SOLARUS_API System {
     static constexpr uint32_t timestep = 10;  /**< Timestep added to the simulated time at each update. */
 
   private:
-    static sf::Clock clock;
+    static sf::Clock clock;               /**< clock to keep time of the time*/
     static uint32_t initial_time;         /**< Initial real time in milliseconds. */
     static uint32_t ticks;                /**< Simulated time in milliseconds. */
 

@@ -30,8 +30,6 @@ std::map<std::string, FontResource::FontFile> FontResource::fonts;
  * \brief Initializes the font system.
  */
 void FontResource::initialize() {
-
-  TTF_Init();
 }
 
 /**
@@ -41,7 +39,6 @@ void FontResource::quit() {
 
   fonts.clear();
   fonts_loaded = false;
-  TTF_Quit();
 }
 
 /**

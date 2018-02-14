@@ -48,7 +48,7 @@ class TimeScrollingTilePattern: public SimpleTilePattern {
     TilePattern::UpdaterPtr add_vertices(VertexArray& array,
                                        const Point& dst_position,
                                        const Tileset&,
-                                       const Point&
+                                       const Rectangle& clip
                                        ) const override{nullptr;} //TODO
     virtual bool is_animated() const override;
 

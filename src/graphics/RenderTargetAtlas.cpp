@@ -7,7 +7,7 @@
 namespace Solarus {
 
 
-constexpr unsigned atlas_size = 1024;
+constexpr unsigned atlas_size = 2048;
 constexpr float inv_size = 1.f / atlas_size;
 
 RenderTargetView::RenderTargetView(Atlas &atlas,
@@ -28,14 +28,7 @@ int RenderTargetView::get_height() const {
     return rect.get_height();
 }
 
-sf::RenderStates RenderTargetView::prepare_render_states(const sf::RenderStates& states) {
-    sf::Transform t;
-    t.translate(rect.get_xy());
-    sf::RenderStates s = states;
-    //s.transform *= t;
-    //glEnable(GL_SCISSOR_TEST); //TODO debug this
-
-    //glScissor(rect.get_left(),rect.get_bottom(),rect.get_width(),rect.get_height());
+void RenderTargetView::setup_viewport() {
     sf::View v(sf::FloatRect(0,0,rect.get_width(),rect.get_height()));
     sf::FloatRect vp{
         rect.get_left() * inv_size,
@@ -44,30 +37,28 @@ sf::RenderStates RenderTargetView::prepare_render_states(const sf::RenderStates&
         rect.get_height() * inv_size
     };
     v.setViewport(vp);
-    //v.zoom(0.5);
-    //v.zoom(atlas_size);
     atlas.back_target.setView(v);
-    return s;
 }
 
 void RenderTargetView::draw(const sf::Drawable& drawable,const sf::RenderStates& states) {
-    auto s = prepare_render_states(states);
+    setup_viewport();
     tex_dirty = true;
-    atlas.back_target.draw(drawable,s);
+    atlas.back_target.draw(drawable,states);
 }
 
 void RenderTargetView::draw(const sf::Vertex* vertices, size_t vertexCount,sf::PrimitiveType type,const sf::RenderStates& states) {
-    auto s = prepare_render_states(states);
+    setup_viewport();
     tex_dirty = true;
-    atlas.back_target.draw(vertices,vertexCount,type,s);
+    atlas.back_target.draw(vertices,vertexCount,type,states);
 }
 
-void RenderTargetView::draw_on(SurfaceImpl& target, const Rectangle& region, const Point& dst_position) const {
+void RenderTargetView::draw_on(SurfaceImpl& target, const Rectangle& region, const Point& dst_position, uint8_t opacity) const {
     Rectangle true_region = region;
     true_region.add_xy(rect.get_xy());
     sprite.setTexture(get_texture());
     sprite.setTextureRect(true_region);
     sprite.setPosition(dst_position);
+    sprite.setColor(sf::Color(255,255,255,opacity));
     target.draw(sprite);
 }
 
@@ -78,13 +69,13 @@ const sf::Texture& RenderTargetView::get_texture() const {
     return atlas.front_target.getTexture();
 }
 
-void RenderTargetView::clear() {
-    clear_sub(rect);
+void RenderTargetView::clear(const sf::Color& clearColor) {
+    clear_sub(rect,clearColor);
 }
 
-void RenderTargetView::clear_sub(const Rectangle& where) {
+void RenderTargetView::clear_sub(const Rectangle& where,const sf::Color& clearColor) {
     sf::RectangleShape r(where.get_size());
-    r.setFillColor(sf::Color::Transparent);
+    r.setFillColor(clearColor);
     r.setPosition(where.get_top_left());
     sf::RenderStates rs(sf::BlendNone);
     tex_dirty = true;
@@ -92,15 +83,16 @@ void RenderTargetView::clear_sub(const Rectangle& where) {
     atlas.back_target.draw(r,rs);
 }
 
-void RenderTargetView::clear(const Rectangle& where) {
+void RenderTargetView::clear(const Rectangle& where, const sf::Color &clearColor) {
     Rectangle corrected = where;
     corrected.add_xy(rect.get_xy());
     corrected = corrected & rect;
-    clear_sub(corrected);
+    clear_sub(corrected,clearColor);
 }
 
 
 RenderTargetView::~RenderTargetView() {
+    clear(sf::Color::Red); //TODO remove
     atlas.pack.unref(bin);
 }
 
@@ -111,7 +103,9 @@ RenderTargetAtlas::RenderTargetAtlas()
 
 RenderTargetViewPtr RenderTargetAtlas::create_view(Atlas& atlas,Bin& b) const {
     Rectangle rect(b.x,b.y,b.w,b.h);
-    return std::make_shared<RenderTargetView>(atlas,rect,b);
+    RenderTargetView* rtv = new RenderTargetView(atlas,rect,b);
+    rtv->clear(); //Make sur target is cleaned
+    return RenderTargetViewPtr(rtv);
 }
 
 RenderTargetViewPtr RenderTargetAtlas::create_view(int width, int height) {

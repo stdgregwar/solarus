@@ -31,7 +31,6 @@ namespace Solarus {
 class Scale2xFilter: public SoftwarePixelFilter {
 
   public:
-
     Scale2xFilter();
 
     virtual int get_scaling_factor() const override;

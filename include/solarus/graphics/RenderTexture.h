@@ -29,6 +29,9 @@ public:
 
     void clear() override;
     void clear(const Rectangle& where) override;
+    ~RenderTexture(){
+
+    }
 private:
     static RenderTargetAtlas render_atlas;
     bool image_dirty = true;

@@ -15,6 +15,8 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
+
 namespace Solarus {
 
 /**
@@ -423,30 +425,6 @@ inline bool Rectangle::overlaps(const Rectangle& other) const {
 }
 
 /**
- * \brief returns the sdl rectangle encapsulated by this object.
- *
- * This function must be used only by other low-level classes
- * (typically surface) as it is library dependent.
- *
- * \return the internal rectangle encapsulated
- */
-inline SDL_Rect* Rectangle::get_internal_rect() {
-	return &rect;
-}
-
-/**
- * \brief returns the sdl rectangle encapsulated by this object.
- *
- * This function must be used only by other low-level classes
- * (typically surface) as it is library dependent.
- *
- * \return the internal rectangle encapsulated
- */
-inline const SDL_Rect* Rectangle::get_internal_rect() const {
-	return &rect;
-}
-
-/**
  * \brief Returns the intersection between this rectangle and another one.
  * \param other Another rectangle.
  * \return The intersection or an empty rectangle.
@@ -479,15 +457,18 @@ inline Rectangle Rectangle::operator&(const Rectangle& other) const {
  * \return This rectangle after modification.
  */
 inline Rectangle& Rectangle::operator&=(const Rectangle& other) {
+	const bool intersects =
+	    !(get_right() < other.get_left() ||
+	    other.get_right() < get_left() ||
+	    get_bottom() < other.get_top() ||
+	    other.get_bottom() < other.get_top());
 
-	Rectangle intersection;
-	const bool intersects = SDL_IntersectRect(
-	    this->get_internal_rect(),
-	    other.get_internal_rect(),
-	    intersection.get_internal_rect()
-	);
 	if (intersects) {
-		*this = intersection;
+		int left = std::max(get_left(),other.get_left());
+		int top = std::max(get_top(),other.get_top());
+		int right = std::min(get_right(),other.get_right());
+		int bottom = std::min(get_bottom(),other.get_bottom());
+		*this = Rectangle(Point(left,top),Point(right,bottom));
 	}
 	else {
 		*this = Rectangle(0, 0, 0, 0);
@@ -511,14 +492,11 @@ inline Rectangle Rectangle::operator|(const Rectangle& other) const {
  * \return This rectangle after modification.
  */
 inline Rectangle& Rectangle::operator|=(const Rectangle& other) {
-
-	Rectangle result;
-	SDL_UnionRect(
-	    this->get_internal_rect(),
-	    other.get_internal_rect(),
-	    result.get_internal_rect()
-	);
-	*this = result;
+	int left = std::min(get_left(),other.get_left());
+	int top = std::min(get_top(),other.get_top());
+	int right = std::max(get_right(),other.get_right());
+	int bottom = std::max(get_bottom(),other.get_bottom());
+	*this = Rectangle(Point(left,top),Point(right,bottom));
 	return *this;
 }
 

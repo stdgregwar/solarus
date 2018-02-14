@@ -24,7 +24,7 @@
 #include "solarus/graphics/Sprite.h"
 #include "solarus/graphics/Video.h"
 #include <SFML/System/Sleep.hpp>
-#include <SDL.h>
+
 #ifdef SOLARUS_USE_APPLE_POOL
 #  include "lowlevel/apple/AppleInterface.h"
 #endif
@@ -36,6 +36,7 @@ namespace Solarus {
 uint32_t System::initial_time = 0;
 uint32_t System::ticks = 0;
 sf::Clock System::clock;
+
 /**
  * \brief Initializes the basic low-level system.
  *
@@ -47,7 +48,6 @@ sf::Clock System::clock;
 void System::initialize(const Arguments& args) {
 
   // initialize SDL
-  SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
   initial_time = get_real_time();
   ticks = 0;
 
@@ -79,8 +79,6 @@ void System::quit() {
   Sprite::quit();
   FontResource::quit();
   Video::quit();
-
-  SDL_Quit();
 }
 
 /**
@@ -106,8 +104,23 @@ void System::update() {
  * \return the name of the running OS.
  */
 std::string System::get_os() {
-
-  return SDL_GetPlatform();
+#ifdef _WIN32
+  return "Windows";
+#endif
+#ifdef __LINUX__
+  return "Linux";
+#endif
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#ifdef TARGET_OS_IPHONE
+  return "iOS";
+#else
+  return "Mac OS X";
+#endif
+#endif
+#ifdef __ANDROID__
+  return "Android";
+#endif
 }
 
 /**
@@ -134,7 +147,6 @@ uint32_t System::now() {
  */
 uint32_t System::get_real_time() {
     return clock.getElapsedTime().asMilliseconds();
-  //return SDL_GetTicks() - initial_time;
 }
 
 /**
@@ -146,7 +158,6 @@ uint32_t System::get_real_time() {
  */
 void System::sleep(uint32_t duration) {
     sf::sleep(sf::milliseconds(duration));
-  //SDL_Delay(duration);
 }
 
 }

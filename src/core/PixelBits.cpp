@@ -19,7 +19,6 @@
 #include "solarus/core/Rectangle.h"
 #include "solarus/core/System.h"
 #include "solarus/graphics/Surface.h"
-#include <SDL.h>
 #include <algorithm>
 #include <iostream> // print functions
 

@@ -25,8 +25,6 @@
 #include <string>
 #include <vector>
 #include <queue>
-#include <SDL_events.h>
-#include <SDL_joystick.h>
 
 #include <SFML/Window/Event.hpp>
 
@@ -48,11 +46,13 @@ class InputEvent {
     /**
      * Enumeration of keyboard keys.
      * This is a Solarus dedicated enumeration.
-     * To make the SDL encapsulation easier, this enumeration is compatible
-     * with the SDL_Keycode enumeration from SDL.
-     * If you intend to replace SDL by another library one day, the API of the
+     * To make the SFML encapsulation easier, this enumeration is compatible
+     * with the sf::Keyboard::Key enumeration from SFML.
+     * If you intend to replace SFML by another library one day, the API of the
      * Input class will not have to change
      * (only its implementation will).
+     * /!\ Now that SFML is in place theses defines have changed, but some keys are missing
+     * and redirected as Unknown.
      * The numeric values of the enumeration can be changed without breaking
      * savegames because savegames use a string name to store the commands.
      */
@@ -190,9 +190,9 @@ class InputEvent {
     /**
      * Enumeration of mouse buttons.
      * This is a Solarus dedicated enumeration.
-     * To make the SDL encapsulation easier, this enumeration is compatible
-     * with SDL_BUTTON definitions from SDL.
-     * If you intend to replace SDL by another library one day, the API of the
+     * To make the SFML encapsulation easier, this enumeration is compatible
+     * with sf::Mouse::Button definitions from SFML.
+     * If you intend to replace SFML by another library one day, the API of the
      * Input class will not have to change
      * (only its implementation will).
      */
@@ -319,15 +319,12 @@ class InputEvent {
     static bool initialized;                      /**< Whether the input manager is initialized. */
     static bool joypad_enabled;                   /**< true if joypad support is enabled
                                                    * (may be true even without joypad plugged) */
-    static SDL_Joystick* joystick;                /**< the joystick object if enabled and plugged */
-    static std::vector<int> joypad_axis_state;    /**< keep track of the current horizontal and vertical axis states */
+
     static std::map<KeyboardKey, std::string>
       keyboard_key_names;                         /**< Names of all existing keyboard keys. */
     static std::map<MouseButton, std::string>
       mouse_button_names;                         /**< Names of all existing mouse buttons. */
     static bool repeat_keyboard;                  /**< True to handle repeat KEYDOWN and KEYUP events. */
-    static std::set<sf::Keyboard::Key> keys_pressed;    /**< Keys currently down, only according to SDL_KEYDOWN and SDL_KEYUP events
-                                                   * (i.e. independently of the real current state SDL_GetKeyboardState()). */
 
     static std::queue<sf::Event> simulated_events; /**< queue of simulated events */
 

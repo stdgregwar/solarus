@@ -1604,6 +1604,7 @@ void LuaContext::game_on_update(Game& game) {
   }
   menus_on_update(-1);
   lua_pop(l, 1);
+  //lua_gc(l,LUA_GCCOLLECT,2); //TODO remove or tweak;
 }
 
 /**

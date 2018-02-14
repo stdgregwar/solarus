@@ -22,7 +22,6 @@
 #include <map>
 #include <memory>
 #include <string>
-#include <SDL_ttf.h>
 
 #include <SFML/Graphics/Font.hpp>
 
@@ -45,29 +44,6 @@ class FontResource {
     static sf::Font& get_outline_font(const std::string& font_id, int size);
 
   private:
-
-    struct SDL_RWops_Deleter {
-      void operator()(SDL_RWops* rw) {
-        SDL_FreeRW(rw);
-      }
-    };
-    using SDL_RWops_UniquePtr = std::unique_ptr<SDL_RWops, SDL_RWops_Deleter>;
-
-    struct TTF_Font_Deleter {
-      void operator()(TTF_Font* font) {
-        TTF_CloseFont(font);
-      }
-    };
-    using TTF_Font_UniquePtr = std::unique_ptr<TTF_Font, TTF_Font_Deleter>;
-
-    /**
-     * Reading an outline font for a given font size.
-     */
-    struct OutlineFontReader {
-        SDL_RWops_UniquePtr rw;
-        TTF_Font_UniquePtr outline_font;
-    };
-
     /**
      * This structure stores in memory the content of a font file.
      */
