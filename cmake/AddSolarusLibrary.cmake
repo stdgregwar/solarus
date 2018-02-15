@@ -153,7 +153,6 @@ file(
 	include/solarus/graphics/SurfaceImpl.h
 	include/solarus/graphics/Texture.h
 	include/solarus/graphics/RenderTexture.h
-	include/solarus/graphics/DrawList.h
 	include/solarus/graphics/SurfacePtr.h
 	include/solarus/graphics/TextSurface.h
 	include/solarus/graphics/TransitionFade.h
@@ -351,7 +350,6 @@ file(
 	src/graphics/SurfaceImpl.cpp
 	src/graphics/Texture.cpp
 	src/graphics/RenderTexture.cpp
-	src/graphics/DrawList.cpp
 	src/graphics/TextSurface.cpp
 	src/graphics/Transition.cpp
 	src/graphics/TransitionFade.cpp

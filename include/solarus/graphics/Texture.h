@@ -17,7 +17,6 @@ public:
     int get_height() const override;
 
     void draw_on(RenderTexture& render_texture, const Rectangle& region, const Point& dst_position) const override;
-    void draw_on(DrawList& list, const Rectangle& region, const Point& dst_position) const override;
 
     void draw_region_other(const Rectangle& region, const SurfaceImpl& other, const Point& dst_position) override;
     RenderTexture* to_render_texture() override;

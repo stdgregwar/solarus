@@ -34,9 +34,11 @@
 #include <memory>
 #include <sstream>
 #include <utility>
+#include <sstream>
 
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
+#include <SFML/Config.hpp>
 
 namespace Solarus {
 
@@ -46,11 +48,8 @@ namespace {
  * \brief Wraps the current video context and settings.
  */
 struct VideoContext {
-
-  //SDL_Window* main_window = nullptr;        /**< The window. */
   sf::RenderWindow main_window;
-  //SDL_Renderer* main_renderer = nullptr;    /**< The screen renderer. */
-  //SDL_PixelFormat* pixel_format = nullptr;  /**< The pixel color format to use. */
+
   std::string rendering_driver_name;        /**< The name of the rendering driver. */
   std::string window_title;
   bool disable_window = false;              /**< Indicates that no window is displayed (used for unit tests). */
@@ -70,7 +69,7 @@ struct VideoContext {
 
   // Shaders.
   bool rendertarget_supported = false;      /**< True if rendering on texture is supported. */
-  //SDL_Texture* render_target = nullptr;     /**< The render texture used. */
+
   sf::RenderTexture render_target;
   sf::Sprite final_sprite;
   bool shaders_enabled = false;             /**< True if shaded modes support is enabled. */
@@ -96,21 +95,7 @@ void create_window() {
 
   Debug::check_assertion(!context.main_window.isOpen(), "Window already exists");
 
-  // Set OpenGL as the default renderer driver when available, to avoid using Direct3d.
-  //SDL_SetHintWithPriority(SDL_HINT_RENDER_DRIVER, "opengl", SDL_HINT_DEFAULT);
-
-  // Set the default OpenGL built-in shader (nearest).
-  //SDL_SetHint(SDL_HINT_RENDER_OPENGL_SHADERS, "0");
-
   std::string title = std::string("Solarus ") + SOLARUS_VERSION;
-  /*context.main_window = SDL_CreateWindow(
-      title.c_str(),
-      SDL_WINDOWPOS_CENTERED,
-      SDL_WINDOWPOS_CENTERED,
-      context.wanted_quest_size.width,
-      context.wanted_quest_size.height,
-      SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL
-  );*/
 
   context.window_title = title;
   context.main_window.create(
@@ -126,49 +111,11 @@ void create_window() {
   Debug::check_assertion(context.main_window.isOpen(),
       std::string("Cannot create the window: "));
 
-  /*context.main_renderer = SDL_CreateRenderer(
-        context.main_window,
-        -1,
-        SDL_RENDERER_ACCELERATED
-  );
-
-  if (context.main_renderer == nullptr) {
-    // Try without acceleration.
-    context.main_renderer = SDL_CreateRenderer(context.main_window, -1, SDL_RENDERER_SOFTWARE);
-  }
-
-  Debug::check_assertion(context.main_renderer != nullptr,
-      std::string("Cannot create the renderer: ") + SDL_GetError());
-
-  // Allow blending mode for direct drawing primitives.
-  SDL_SetRenderDrawBlendMode(context.main_renderer, SDL_BLENDMODE_BLEND);
-
-  // Get the first renderer format which supports alpha channel and is not a unique format.
-  SDL_RendererInfo renderer_info;
-  SDL_GetRendererInfo(context.main_renderer, &renderer_info);
-  for (unsigned i = 0; i < renderer_info.num_texture_formats; ++i) {
-
-    if (!SDL_ISPIXELFORMAT_FOURCC(renderer_info.texture_formats[i])
-        && SDL_ISPIXELFORMAT_ALPHA(renderer_info.texture_formats[i])) {
-      context.pixel_format = SDL_AllocFormat(renderer_info.texture_formats[i]);
-      break;
-    }
-  }
-
-  Debug::check_assertion(context.pixel_format != nullptr, "No compatible pixel format");
-
-  // Check renderer's flags
-  context.rendering_driver_name = renderer_info.name;
-  context.rendertarget_supported = (renderer_info.flags & SDL_RENDERER_TARGETTEXTURE) != 0;
-
-  // Decide whether we enable shaders.
-  context.shaders_enabled = context.rendertarget_supported &&
-      ShaderContext::initialize();*/
-  /*int width = context.normal_quest_size.width;
-  int height = context.normal_quest_size.height;
-  if(context.render_target.create(width,height)) {
-      Debug::error("Cannot create main render texture");
-  }*/
+  const sf::ContextSettings& cs = context.main_window.getSettings();
+  std::ostringstream oss;
+  oss << "OpenGL " << cs.majorVersion << "." << cs.minorVersion;
+  context.rendering_driver_name = oss.str();
+  Logger::info("Rendering Driver : " + context.rendering_driver_name);
 }
 
 /**
@@ -226,14 +173,10 @@ void initialize(const Arguments& args) {
 
   Debug::check_assertion(!is_initialized(), "Video system already initialized");
 
-  // Show the SDL version.
-  //SDL_version sdl_version;
-  /*SDL_GetVersion(&sdl_version);
   std::ostringstream oss;
-  oss << "SDL: " << static_cast<int>(sdl_version.major) << "." << static_cast<int>(sdl_version.minor) << "." << static_cast<int>(sdl_version.patch);
-  Logger::info(oss.str());*/
+  oss << "SFML " << SFML_VERSION_MAJOR << "." << SFML_VERSION_MINOR << "." << SFML_VERSION_PATCH;
 
-
+  Logger::info(oss.str());
 
   // Check the -no-video and the -quest-size options.
   const std::string& quest_size_string = args.get_argument_value("-quest-size");
@@ -271,26 +214,7 @@ void quit() {
 
   ShaderContext::quit();
 
-  /*if (is_fullscreen()) {
-    // Get back on desktop before destroy the window.
-    SDL_SetWindowFullscreen(context.main_window, 0);
-  }*/
-
   context.all_video_modes.clear();
-
-  /*if (context.pixel_format != nullptr) {
-    SDL_FreeFormat(context.pixel_format);
-    context.pixel_format = nullptr;
-  }
-  if (context.main_renderer != nullptr) {
-    SDL_DestroyRenderer(context.main_renderer);
-    context.main_renderer = nullptr;
-  }
-  if (context.main_window != nullptr) {
-    SDL_DestroyWindow(context.main_window);
-    context.main_window = nullptr;
-  }*/
-
   context.main_window.close(); //Close mainwindow
 
   //context = VideoContext();

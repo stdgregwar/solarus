@@ -21,7 +21,6 @@ public:
     void draw_region_other(const Rectangle& region, const SurfaceImpl &other, const Point& dst_position) override;
 
     void draw_on(RenderTexture& render_texture, const Rectangle& region, const Point& dst_position) const override;
-    void draw_on(DrawList& list, const Rectangle& region, const Point& dst_position) const override;
 
     RenderTexture* to_render_texture() override;
     void draw(const sf::Drawable&drawable, const sf::RenderStates& states=sf::RenderStates::Default) override;

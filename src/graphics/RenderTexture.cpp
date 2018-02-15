@@ -1,5 +1,4 @@
 #include "solarus/graphics/RenderTexture.h"
-#include "solarus/graphics/DrawList.h"
 #include "solarus/graphics/Surface.h"
 
 #include "solarus/core/Debug.h"
@@ -38,10 +37,6 @@ void RenderTexture::draw_region_other(const Rectangle& region, const SurfaceImpl
 
 void RenderTexture::draw_on(RenderTexture& render_texture, const Rectangle& region, const Point& dst_position) const {
     target->draw_on(render_texture,region,dst_position,parent().get_opacity());
-}
-
-void RenderTexture::draw_on(DrawList& list, const Rectangle& region, const Point& dst_position) const {
-    target->draw_on(list,region,dst_position,parent().get_opacity());
 }
 
 void RenderTexture::draw(const sf::Drawable& drawable,const sf::RenderStates& states) {

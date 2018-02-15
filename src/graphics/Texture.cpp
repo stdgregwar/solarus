@@ -37,10 +37,6 @@ void Texture::draw_on(RenderTexture& render_texture, const Rectangle& region, co
     render_texture.draw(sprite);
 }
 
-void Texture::draw_on(DrawList& list, const Rectangle& region, const Point& dst_position) const {
-}
-
-
 void Texture::draw_region_other(const Rectangle& region, const SurfaceImpl &other, const Point& dst_position) {
     Debug::error("Trying to draw on a texture!");
 }

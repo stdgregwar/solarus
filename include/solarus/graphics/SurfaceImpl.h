@@ -10,7 +10,6 @@ namespace Solarus {
 
 class Texture;
 class RenderTexture;
-class DrawList;
 class Surface;
 
 /**
@@ -28,7 +27,6 @@ public:
     virtual int get_height() const = 0;
 
     virtual void draw_on(RenderTexture& render_texture, const Rectangle& region, const Point& dst_position) const = 0;
-    virtual void draw_on(DrawList& list, const Rectangle& region, const Point& dst_position) const = 0;
 
     virtual void draw_region_other(const Rectangle& region, const SurfaceImpl& other, const Point& dst_position) = 0;
     void draw_other(const SurfaceImpl& other, const Point& dst_position = Point(0,0));
