@@ -56,6 +56,7 @@ class NonAnimatedRegions {
 
     bool overlaps_animated_tile(const TileInfo& tile) const;
     void build_cell(int cell_index);
+    void build_moving_cell();
 
     Map& map;                               /**< The map. */
     int layer;                              /**< Layer of the map managed by this object. */
@@ -63,9 +64,14 @@ class NonAnimatedRegions {
         tiles;                              /**< All tiles contained in this layer and candidates to
                                              * be optimized. This list is cleared after build() is called. */
 
+    std::vector<TileInfo>                   /**< The tiles not drawn at their original position*/
+        moving_tiles;
+
+    MapCell moving_cell;                    /**< Global cell containing moving tiles*/
+
     // Handle the lazy drawing.
     Grid<TileInfo>
-        non_animated_tiles;                 /**< All non-animated tiles. Stored in a grid so that
+        static_tiles;                       /**< All non-animated tiles. Stored in a grid so that
                                              * we can quickly find the ones to draw lazily later when the
                                              * camera moves. */
     std::vector<MapCell>

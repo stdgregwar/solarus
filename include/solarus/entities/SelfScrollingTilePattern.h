@@ -43,7 +43,7 @@ class SelfScrollingTilePattern: public SimpleTilePattern {
             quad(view), pattern(pattern), base_position(base_position) {
 
         }
-        void update(const Point& viewport) override {
+        void update(const Point& viewport,const Rectangle& clip) override {
             Point offset = viewport / ParallaxScrollingTilePattern::ratio;
             int x_mod = offset.x % base_position.get_width();
             offset.x = x_mod < 0 ? x_mod + base_position.get_width() : x_mod;

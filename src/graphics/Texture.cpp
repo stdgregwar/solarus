@@ -37,30 +37,10 @@ void Texture::draw_on(RenderTexture& render_texture, const Rectangle& region, co
     render_texture.draw(sprite);
 }
 
-void Texture::draw_region_other(const Rectangle& region, const SurfaceImpl &other, const Point& dst_position) {
-    Debug::error("Trying to draw on a texture!");
-}
-
 RenderTexture* Texture::to_render_texture() {
     RenderTexture* rt = new RenderTexture(texture.getSize().x,texture.getSize().y);
     rt->draw(sprite);
     return rt;
-}
-
-void Texture::draw(const sf::Drawable&drawable, const sf::RenderStates& states) {
-    Debug::error("trying to draw on a texture");
-}
-
-void Texture::draw(const sf::Vertex* vertices, size_t vertexCount,sf::PrimitiveType type,const sf::RenderStates& states) {
-    Debug::error("trying to draw on a texture");
-}
-
-void Texture::clear() {
-    Debug::error("Trying to clear a texture");
-}
-
-void Texture::clear(const Rectangle& where) {
-    Debug::error("Trying to clear part of a texture");
 }
 
 }

@@ -39,18 +39,6 @@ namespace Solarus {
 class ParallaxScrollingTilePattern: public SimpleTilePattern {
 
   public:
-    struct ParralaxUpdater : public TilePattern::Updater {
-        ParralaxUpdater(const VerticeView& view, const Point& base_position):
-            quad(view),base_position(base_position){
-
-        }
-        void update(const Point& viewport) override {
-            Point dst = base_position + viewport / ParallaxScrollingTilePattern::ratio;
-            quad.update_quad_position(dst);
-        }
-        VerticeView quad;
-        const Point base_position;
-    };
     ParallaxScrollingTilePattern(Ground ground, const Point& xy, const Size& size);
 
     virtual void draw(

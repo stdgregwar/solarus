@@ -153,6 +153,7 @@ TilePattern::UpdaterPtr AnimatedTilePattern::add_vertices(VertexArray& array,
     Rectangle root_position = position_in_tileset[current_frames[sequence]];
     Rectangle quad = root_position;
     quad.set_xy(dst_position);
+    quad &= clip;
     VerticeView view = array.add_quad(quad,root_position,Color::white);
     return TilePattern::UpdaterPtr(new AnimUpdater(view,*this,dst_position));
 }

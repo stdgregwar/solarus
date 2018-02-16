@@ -17,15 +17,7 @@ public:
     int get_height() const override;
 
     void draw_on(RenderTexture& render_texture, const Rectangle& region, const Point& dst_position) const override;
-
-    void draw_region_other(const Rectangle& region, const SurfaceImpl& other, const Point& dst_position) override;
     RenderTexture* to_render_texture() override;
-
-    void draw(const sf::Drawable&drawable, const sf::RenderStates& states=sf::RenderStates::Default) override;
-    void draw(const sf::Vertex* vertices, size_t vertexCount,sf::PrimitiveType type,const sf::RenderStates& states =sf::RenderStates::Default) override;
-
-    void clear() override;
-    void clear(const Rectangle& where) override;
 private:
     sf::Image image;
     sf::Texture texture;

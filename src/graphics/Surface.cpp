@@ -257,7 +257,7 @@ SurfacePtr Surface::seal_to_texture() const {
  * The opacity property of the surface is preserved.
  */
 void Surface::clear() {
-    internal_surface->clear();
+    request_render().clear();
 }
 
 /**
@@ -269,7 +269,7 @@ void Surface::clear() {
  * \param where The rectangle to clear.
  */
 void Surface::clear(const Rectangle& where) { //TODO deprecate
-    internal_surface->clear(where);
+    request_render().clear();
 }
 
 /**
@@ -297,7 +297,7 @@ void Surface::fill_with_color(const Color& color, const Rectangle& where) {
     sf::RectangleShape rs(where.get_size());
     rs.setPosition(where.get_xy());
     rs.setFillColor(color);
-    internal_surface->draw(rs);
+    request_render().draw(rs);
 }
 
 /**
@@ -306,10 +306,7 @@ void Surface::fill_with_color(const Color& color, const Rectangle& where) {
  * \param dst_position Coordinates on the destination surface.
  */
 void Surface::raw_draw(Surface& dst_surface, const Point& dst_position) {
-
-  //Rectangle region(0, 0, get_width(), get_height());
-  //raw_draw_region(region, dst_surface, dst_position);
-  dst_surface.internal_surface->draw_other(*internal_surface,dst_position);
+  dst_surface.request_render().draw_other(*internal_surface,dst_position);
 }
 
 /**
@@ -322,8 +319,7 @@ void Surface::raw_draw_region(
     const Rectangle& region,
     Surface& dst_surface,
     const Point& dst_position) {
-    //TODO take opacity into acounnt
-    dst_surface.internal_surface->draw_region_other(region,*internal_surface,dst_position);
+    dst_surface.request_render().draw_region_other(region,*internal_surface,dst_position);
 }
 
 /**

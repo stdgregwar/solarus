@@ -20,6 +20,7 @@
 #include "solarus/entities/NonAnimatedRegions.h"
 #include "solarus/entities/Tileset.h"
 #include "solarus/graphics/Surface.h"
+#include "solarus/entities/ParallaxScrollingTilePattern.h"
 
 namespace Solarus {
 
@@ -33,7 +34,7 @@ constexpr Size cell_size(512,256);
 NonAnimatedRegions::NonAnimatedRegions(Map& map, int layer):
   map(map),
   layer(layer),
-  non_animated_tiles(map.get_size(), cell_size)
+  static_tiles(map.get_size(), cell_size)
 {
 
 }
@@ -62,11 +63,15 @@ void NonAnimatedRegions::build(std::vector<TileInfo>& rejected_tiles) {
   Debug::check_assertion(optimized_map_cells.empty(),
                          "Tile regions are already built");
 
-  optimized_map_cells.resize(non_animated_tiles.get_num_cells());
+  optimized_map_cells.resize(static_tiles.get_num_cells());
 
   // Build the list of animated tiles and tiles overlapping them. //TODO wipe this altogether
   for (const TileInfo& tile: tiles) {
-    non_animated_tiles.add(tile,tile.box);
+    if(tile.pattern->is_drawn_at_its_position()) {
+      static_tiles.add(tile,tile.box);
+    } else {
+      moving_tiles.push_back(tile);
+    }
   }
   tiles.clear();
 }
@@ -76,9 +81,12 @@ void NonAnimatedRegions::build(std::vector<TileInfo>& rejected_tiles) {
  */
 void NonAnimatedRegions::notify_tileset_changed() {
 
-  for (unsigned i = 0; i < non_animated_tiles.get_num_cells(); ++i) {
+  for (unsigned i = 0; i < static_tiles.get_num_cells(); ++i) {
     optimized_map_cells[i].v_array = nullptr;
+    optimized_map_cells[i].updater = nullptr;
   }
+  moving_cell.v_array = nullptr;
+  moving_cell.updater = nullptr;
   // Everything will be redrawn when necessary.
 }
 
@@ -93,9 +101,9 @@ void NonAnimatedRegions::draw_on_map() {
   }
 
   // Check all grid cells that overlap the camera.
-  const int num_rows = non_animated_tiles.get_num_rows();
-  const int num_columns = non_animated_tiles.get_num_columns();
-  const Size& cell_size = non_animated_tiles.get_cell_size();
+  const int num_rows = static_tiles.get_num_rows();
+  const int num_columns = static_tiles.get_num_columns();
+  const Size& cell_size = static_tiles.get_cell_size();
   const Rectangle& camera_position = camera->get_bounding_box();
 
   const int row1 = camera_position.get_y() / cell_size.height;
@@ -106,6 +114,16 @@ void NonAnimatedRegions::draw_on_map() {
   if (row1 > row2 || column1 > column2) {
     // No cell.
     return;
+  }
+
+  //Draw all moving tiles before the static ones
+  if(moving_cell.v_array) {
+    moving_cell.updater->update(-camera_position.get_xy(),Rectangle());
+    moving_cell.v_array->draw(
+          map.get_camera_surface(),-camera_position.get_xy() / ParallaxScrollingTilePattern::ratio,map.get_tileset().get_tiles_image()
+        );
+  } else {
+    build_moving_cell();
   }
 
   for (int i = row1; i <= row2; ++i) {
@@ -133,7 +151,7 @@ void NonAnimatedRegions::draw_on_map() {
       const Point dst_position = cell_xy - camera_position.get_xy();
       //Update cell content
       if(optimized_map_cells[cell_index].updater)
-        optimized_map_cells[cell_index].updater->update(camera_position.get_xy());
+        optimized_map_cells[cell_index].updater->update(camera_position.get_xy(),Rectangle(Point(0,0),cell_size));
 
       //Draw vertex array corresponding to cell
       optimized_map_cells[cell_index].v_array->draw(
@@ -149,18 +167,18 @@ void NonAnimatedRegions::draw_on_map() {
  */
 void NonAnimatedRegions::build_cell(int cell_index) {
   Debug::check_assertion(
-        cell_index >= 0 && (size_t) cell_index < non_animated_tiles.get_num_cells(),
+        cell_index >= 0 && (size_t) cell_index < static_tiles.get_num_cells(),
         "Wrong cell index"
         );
   Debug::check_assertion(optimized_map_cells[cell_index].v_array == nullptr,
                          "This cell is already built"
                          );
 
-  const int row = cell_index / non_animated_tiles.get_num_columns();
-  const int column = cell_index % non_animated_tiles.get_num_columns();
+  const int row = cell_index / static_tiles.get_num_columns();
+  const int column = cell_index % static_tiles.get_num_columns();
 
   // Position of this cell on the map.
-  const Size cell_size = non_animated_tiles.get_cell_size();
+  const Size cell_size = static_tiles.get_cell_size();
   const Point cell_xy = {
     column * cell_size.width,
     row * cell_size.height
@@ -171,12 +189,11 @@ void NonAnimatedRegions::build_cell(int cell_index) {
   optimized_map_cells[cell_index].v_array = cell_array;
 
   const std::vector<TileInfo>& tiles_in_cell =
-      non_animated_tiles.get_elements(cell_index);
+      static_tiles.get_elements(cell_index);
 
   std::vector<TilePattern::UpdaterPtr> updaters;
 
   for (const TileInfo& tile: tiles_in_cell) {
-
     Rectangle dst_position(
           tile.box.get_x() - cell_xy.x,
           tile.box.get_y() - cell_xy.y,
@@ -188,7 +205,6 @@ void NonAnimatedRegions::build_cell(int cell_index) {
           *cell_array,
           dst_position,
           map.get_tileset(),
-          cell_xy,
           cell_size
           );
     if(u) updaters.emplace_back(std::move(u));
@@ -197,6 +213,29 @@ void NonAnimatedRegions::build_cell(int cell_index) {
   if(!updaters.empty()) {
     optimized_map_cells[cell_index].updater.reset(new TilePattern::MultiUpdater(std::move(updaters)));
   }
+}
+
+void NonAnimatedRegions::build_moving_cell() {
+  VertexArrayPtr cell_array = VertexArray::create(Triangles);
+  moving_cell.v_array = cell_array;
+  std::vector<TilePattern::UpdaterPtr> updaters;
+  for (const TileInfo& tile: moving_tiles) {
+    Rectangle dst_position(
+          tile.box.get_x(),
+          tile.box.get_y(),
+          tile.box.get_width(),
+          tile.box.get_height()
+          );
+
+    auto u = tile.pattern->fill_vertex_array(
+          *cell_array,
+          dst_position,
+          map.get_tileset(),
+          map.get_size()
+          );
+    if(u) updaters.emplace_back(std::move(u));
+  }
+  moving_cell.updater.reset(new TilePattern::MultiUpdater(std::move(updaters)));
 }
 
 }

@@ -61,9 +61,8 @@ TilePattern::UpdaterPtr ParallaxScrollingTilePattern::add_vertices(VertexArray& 
                                    ) const {
     Rectangle quad = position_in_tileset;
     quad.set_xy(dst_position);
-    VerticeView v = array.add_quad(quad,position_in_tileset,Color::white);
-    return TilePattern::UpdaterPtr(
-                new ParralaxUpdater(v,dst_position));
+    array.add_quad(quad,position_in_tileset,Color::white);
+    return nullptr;
 }
 
 /**
@@ -78,7 +77,6 @@ TilePattern::UpdaterPtr ParallaxScrollingTilePattern::add_vertices(VertexArray& 
 bool ParallaxScrollingTilePattern::is_animated() const {
   return true;
 }
-
 
 
 /**

@@ -189,7 +189,6 @@ TilePattern::UpdaterPtr TilePattern::fill_vertex_array(
         VertexArray& array,
         const Rectangle& dst_position,
         const Tileset& tileset,
-        const Point& viewport,
         const Size& cell_size
         ) const {
     Point dst;

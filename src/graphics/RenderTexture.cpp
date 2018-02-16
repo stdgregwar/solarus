@@ -31,6 +31,11 @@ const sf::Texture &RenderTexture::get_texture() const {
     return target->get_texture();
 }
 
+
+void RenderTexture::draw_other(const SurfaceImpl& other, const Point& dst_position) {
+    draw_region_other(Rectangle(0,0,other.get_width(),other.get_height()),other,dst_position);
+}
+
 void RenderTexture::draw_region_other(const Rectangle& region, const SurfaceImpl& other, const Point& dst_position) {
     other.draw_on(*this,region,dst_position);
 }

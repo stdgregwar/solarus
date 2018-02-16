@@ -106,7 +106,7 @@ void create_window() {
               );
 
   context.main_window.setVisible(false);
-  context.main_window.setVerticalSyncEnabled(true);
+  //context.main_window.setVerticalSyncEnabled(true);
 
   Debug::check_assertion(context.main_window.isOpen(),
       std::string("Cannot create the window: "));
@@ -123,7 +123,30 @@ void create_window() {
  */
 void initialize_software_video_modes() {
 
+
   context.all_video_modes.emplace_back(
+        "normal",
+        context.quest_size * 2,
+        nullptr
+  );
+  context.all_video_modes.emplace_back(
+      "scale2x",
+      context.quest_size * 2,
+      &Solarus::SCALE2X_FILTER
+  );
+  context.all_video_modes.emplace_back(
+      "hq2x",
+      context.quest_size * 2,
+      &Solarus::HQ2X_FILTER
+  );
+  context.all_video_modes.emplace_back(
+      "hq4x",
+      context.quest_size * 4,
+      &Solarus::HQ4X_FILTER
+  );
+
+
+  /*context.all_video_modes.emplace_back(
       "normal",
       context.quest_size * 2,
       nullptr
@@ -147,7 +170,7 @@ void initialize_software_video_modes() {
       "hq4x",
       context.quest_size * 4,
       std::unique_ptr<SoftwarePixelFilter>(new Hq4xFilter())
-  );
+  );*/
 
   context.default_video_mode = &context.all_video_modes[0];
 
@@ -200,6 +223,7 @@ void initialize(const Arguments& args) {
   }
   else {
     create_window();
+    //initialize_software_video_modes();
   }
 }
 
@@ -332,42 +356,28 @@ void render(const SurfacePtr& quest_surface) {
     return;
   }
 
-  /*Debug::check_assertion(context.video_mode != nullptr,
-      "Missing video mode");*/
-
-  // See if there is a filter to apply.
-  //SurfacePtr surface_to_render = quest_surface;
-  //const SoftwarePixelFilter* software_filter = context.video_mode->get_software_filter();
-  /*if (software_filter != nullptr) {
-    Debug::check_assertion(context.scaled_surface != nullptr,
-        "Missing destination surface for scaling");
-    quest_surface->apply_pixel_filter(*software_filter, *context.scaled_surface);
-    surface_to_render = context.scaled_surface;
-  }*/
-
   if (context.current_shader != nullptr) {
     // OpenGL rendering with the current shader.
     context.current_shader->render(quest_surface);
   }
   else {
-    // SDL rendering.
-    /*SDL_SetRenderDrawColor(context.main_renderer, 0, 0, 0, 255);
-    SDL_RenderSetClipRect(context.main_renderer, nullptr);
-    SDL_RenderClear(context.main_renderer);
-    surface_to_render->render(*context.render_target);
-    SDL_RenderCopy(context.main_renderer, context.render_target, nullptr, nullptr);
-    SDL_RenderPresent(context.main_renderer);*/
-      //SFML rendering
+    //SFML rendering
     RenderTexture& rt = quest_surface->request_render();
     //sf::Image& img = rt.get_image();
     const sf::Texture& tex = rt.get_texture();
+    sf::Shader* shader = context.video_mode->get_filter();
+    if(shader) {
+      shader->setUniform("sol_texture",sf::Shader::CurrentTexture);
+      shader->setUniform("sol_input_size",sf::Glsl::Vec2(tex.getSize()));
+      shader->setUniform("sol_output_size",sf::Glsl::Vec2(context.main_window.getSize()));
+    }
     //sf::View v = letter_box_view(context.main_window,tex.getSize());//sf::Vector2u(rt.get_width(),rt.get_height()));
     sf::View v = letter_box_view(context.main_window,sf::Vector2u(rt.get_width(),rt.get_height()));
     context.main_window.clear();
     context.main_window.setView(v);
-    sf::Sprite s(tex);
+    sf::Sprite sprite(tex,sf::IntRect(0,0,rt.get_width(),rt.get_height()));
     //s.setPosition(0,-40);
-    context.main_window.draw(s);
+    context.main_window.draw(sprite,shader ? sf::RenderStates(shader) : sf::RenderStates::Default);
   }
   context.main_window.display();
 }
@@ -475,6 +485,8 @@ void set_quest_size_range(
   else {
     context.quest_size = context.wanted_quest_size;
   }
+
+  initialize_software_video_modes();
 
   // Initialize the render target.
   /*context.render_target = SDL_CreateTexture(
@@ -661,40 +673,10 @@ void switch_video_mode() {
  * \return true in case of success, false if this mode is not supported.
  */
 bool set_video_mode(const SoftwareVideoMode& mode) {
-
-  /*bool mode_changed = context.video_mode == nullptr
-      || mode.get_name() != context.video_mode->get_name();
-
-  if (!is_mode_supported(mode)) {
-    return false;
-  }
-
+  //TODO fill if not useless
+  context.main_window.setSize(mode.get_initial_window_size());
   context.video_mode = &mode;
-  if (!context.disable_window) {
-
-    context.scaled_surface = nullptr;
-
-    Size render_size = context.quest_size;
-
-    const SoftwarePixelFilter* software_filter = mode.get_software_filter();
-    if (software_filter != nullptr) {
-      int factor = software_filter->get_scaling_factor();
-      render_size = context.quest_size * factor;
-      context.scaled_surface = Surface::create(render_size);
-      context.scaled_surface->fill_with_color(Color::black);  // To initialize the internal surface.
-    }
-
-    SDL_RenderSetLogicalSize(
-        context.main_renderer,
-        render_size.width,
-        render_size.height);
-
-    if (mode_changed) {
-      reset_window_size();
-    }
-  }
-
-  return true;*/
+  return true;
 }
 
 /**

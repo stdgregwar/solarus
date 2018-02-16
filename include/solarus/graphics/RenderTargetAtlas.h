@@ -31,7 +31,7 @@ public:
     int get_width() const;
     int get_height() const;
     const sf::Texture& get_texture() const;
-    void draw_on(Solarus::SurfaceImpl &target, const Rectangle& region, const Point& dst_position, uint8_t opacity = 255) const;
+    void draw_on(RenderTexture &target, const Rectangle& region, const Point& dst_position, uint8_t opacity = 255) const;
     void clear(const sf::Color &clearColor = sf::Color::Transparent);
     void clear(const Rectangle& where,const sf::Color& clearColor = sf::Color::Transparent);
     ~RenderTargetView();

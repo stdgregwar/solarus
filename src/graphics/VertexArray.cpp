@@ -1,6 +1,8 @@
 #include "solarus/graphics/VertexArray.h"
 #include "solarus/graphics/Surface.h"
 
+#include "solarus/graphics/RenderTexture.h"
+
 namespace Solarus {
 
 Vertex& VerticeView::operator [](size_t index) {
@@ -201,7 +203,7 @@ void VertexArray::draw(const SurfacePtr& dst_surface,const Point& dst_position, 
     t.translate(dst_position);
     sf::RenderStates rs(t);
     rs.texture = &texture->internal_surface->get_texture();
-    dst_surface->internal_surface->draw(static_cast<const sf::Vertex*>(data()),vertex_count(),(sf::PrimitiveType)type,rs); //TODO add method to dst_surface
+    dst_surface->request_render().draw(static_cast<const sf::Vertex*>(data()),vertex_count(),(sf::PrimitiveType)type,rs); //TODO add method to dst_surface
 }
 
 const Vertex& VertexArray::operator [](size_t index) const {

@@ -22,6 +22,8 @@
 #include <memory>
 #include <string>
 
+#include <SFML/Graphics/Shader.hpp>
+
 namespace Solarus {
 
 class SoftwarePixelFilter;
@@ -36,27 +38,26 @@ class Shader;
  * The new recommended way is to use shaders.
  */
 class SoftwareVideoMode {
+public:
+  struct FilterSource{
+    const std::string vertex_source;
+    const std::string fragment_source;
+  };
 
-  public:
+  SoftwareVideoMode(
+      const std::string& name,
+      const Size& initial_window_size,
+      const FilterSource* source
+      );
 
-    SoftwareVideoMode(
-        const std::string& name,
-        const Size& initial_window_size,
-        std::unique_ptr<SoftwarePixelFilter> software_filter
-    );
-
-    const std::string& get_name() const;
-    const Size& get_initial_window_size() const;
-    const SoftwarePixelFilter* get_software_filter() const;
-
-  private:
-
-    std::string name;              /**< Lua name of this video mode. */
-    Size initial_window_size;      /**< Default size of the window when
-                                    * selecting this video mode. */
-
-    std::unique_ptr<SoftwarePixelFilter>
-        software_filter;           /**< Software scaling pixel filter to use or nullptr. */
+  const std::string& get_name() const;
+  const Size& get_initial_window_size() const;
+  sf::Shader *get_filter() const;
+private:
+  const FilterSource* source; /**< Software scaling pixel filter to use or nullptr. */
+  std::string name;
+  const Size initial_window_size;
+  std::unique_ptr<sf::Shader> shader;
 
 };
 

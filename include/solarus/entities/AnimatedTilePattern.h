@@ -37,19 +37,21 @@ class AnimatedTilePattern: public TilePattern {
     struct AnimUpdater : public TilePattern::Updater {
         AnimUpdater(const VerticeView& view, const AnimatedTilePattern& pattern,const Point& base_position):
             quad(view), pattern(pattern), base_position(base_position){
-
         }
-        void update(const Point& viewport) override {
+        void update(const Point& viewport,const Rectangle& clip) override {
             const Rectangle& src = pattern.position_in_tileset[pattern.current_frames[pattern.sequence]];
             if(pattern.parallax) {
-                Point dst = base_position + viewport / ParallaxScrollingTilePattern::ratio;
-                quad.update_quad_position(dst);
+                quad.update_quad_uvs(src);
+            } else {
+              Rectangle uvclip = clip;
+              uvclip.add_xy(-base_position+src.get_xy());
+              Rectangle clipuv = src & uvclip;
+              quad.update_quad_uvs(clipuv);
             }
-            quad.update_quad_uvs(src);
         }
         VerticeView quad;
         const AnimatedTilePattern& pattern;
-        const Point& base_position;
+        const Point base_position;
     };
 
     /**
@@ -82,7 +84,6 @@ class AnimatedTilePattern: public TilePattern {
                                        ) const override; //TODO
 
     virtual bool is_drawn_at_its_position() const override;
-
   private:
 
     // static variables to handle the animations of all tiles

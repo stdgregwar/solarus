@@ -18,16 +18,17 @@ public:
     int get_width() const override;
     int get_height() const override;
 
-    void draw_region_other(const Rectangle& region, const SurfaceImpl &other, const Point& dst_position) override;
+    void draw_other(const SurfaceImpl& other, const Point& dst_position = Point(0,0));
+    void draw_region_other(const Rectangle& region, const SurfaceImpl &other, const Point& dst_position);
 
-    void draw_on(RenderTexture& render_texture, const Rectangle& region, const Point& dst_position) const override;
+    void draw_on(RenderTexture& render_texture, const Rectangle& region, const Point& dst_position) const;
 
     RenderTexture* to_render_texture() override;
-    void draw(const sf::Drawable&drawable, const sf::RenderStates& states=sf::RenderStates::Default) override;
-    void draw(const sf::Vertex* vertices, size_t vertexCount,sf::PrimitiveType type,const sf::RenderStates& states =sf::RenderStates::Default) override;
+    void draw(const sf::Drawable&drawable, const sf::RenderStates& states=sf::RenderStates::Default);
+    void draw(const sf::Vertex* vertices, size_t vertexCount,sf::PrimitiveType type,const sf::RenderStates& states =sf::RenderStates::Default);
 
-    void clear() override;
-    void clear(const Rectangle& where) override;
+    void clear();
+    void clear(const Rectangle& where);
     ~RenderTexture(){
 
     }

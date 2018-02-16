@@ -461,7 +461,7 @@ inline Rectangle& Rectangle::operator&=(const Rectangle& other) {
 	    !(get_right() < other.get_left() ||
 	    other.get_right() < get_left() ||
 	    get_bottom() < other.get_top() ||
-	    other.get_bottom() < other.get_top());
+	    other.get_bottom() < get_top());
 
 	if (intersects) {
 		int left = std::max(get_left(),other.get_left());

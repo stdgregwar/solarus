@@ -22,26 +22,7 @@
 #include <cstdint>
 
 namespace Solarus {
-
-/**
- * \brief Wrapper to the hq3x algorithm.
- */
-class Hq3xFilter: public SoftwarePixelFilter {
-
-  public:
-
-    Hq3xFilter();
-
-    virtual int get_scaling_factor() const override;
-    virtual void filter(
-        const uint32_t* src,
-        int src_width,
-        int src_height,
-        uint32_t* dst
-    ) const override;
-
-};
-
+  //TODO
 }
 
 #endif

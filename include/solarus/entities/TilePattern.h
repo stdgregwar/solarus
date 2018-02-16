@@ -40,9 +40,8 @@ class Tileset;
 class TilePattern {
 
   public:
-
     struct Updater{
-        virtual void update(const Point& viewport) = 0;
+        virtual void update(const Point& viewport, const Rectangle& clip) = 0;
         virtual ~Updater(){}
     };
 
@@ -55,9 +54,9 @@ class TilePattern {
             updaters(std::move(updaters)){
 
         }
-        void update(const Point& viewport) override {
+        void update(const Point& viewport, const Rectangle& clip) override {
             for(const auto& u : updaters) {
-                u->update(viewport);
+                u->update(viewport,clip);
             }
         }
     private:
@@ -84,8 +83,7 @@ class TilePattern {
     UpdaterPtr fill_vertex_array(VertexArray& array,
             const Rectangle& dst_position,
             const Tileset& tileset,
-            const Point& viewport
-            , const Size &cell_size) const;
+            const Size &cell_size) const;
 
 
     /**

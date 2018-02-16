@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright (C) 2006-2018 Christopho, Solarus - http://www.solarus-games.org
  *
  * Solarus is free software; you can redistribute it and/or modify
@@ -17,6 +17,7 @@
 #include "solarus/core/Debug.h"
 #include "solarus/graphics/SoftwareVideoMode.h"
 #include "solarus/graphics/SoftwarePixelFilter.h"
+#include "solarus/core/Logger.h"
 #include <utility>
 
 namespace Solarus {
@@ -27,15 +28,21 @@ namespace Solarus {
  * \param initial_window_size Default size of the window when selecting this video mode.
  * \param software_filter Software filter to apply to the quest image or nullptr.
  */
-SoftwareVideoMode::SoftwareVideoMode(
-    const std::string& name,
+SoftwareVideoMode::SoftwareVideoMode(const std::string& name,
     const Size& initial_window_size,
-    std::unique_ptr<SoftwarePixelFilter> software_filter
-):
-   name(name),
-   initial_window_size(initial_window_size),
-   software_filter(std::move(software_filter)) {
-
+    const FilterSource *source
+    ):
+  name(name),source(source),initial_window_size(initial_window_size)
+{
+   if(source) {
+    sf::Shader* sh = new sf::Shader();
+    if(!sh->loadFromMemory(source->vertex_source,source->fragment_source)) {
+      Debug::error("Failed to load shader "+name);
+    } else {
+      Logger::info("Loaded filter shader " + name);
+    }
+    shader.reset(sh);
+  }
 }
 
 /**
@@ -58,8 +65,8 @@ const Size& SoftwareVideoMode::get_initial_window_size() const {
  * \brief Returns the software filter applied to the quest image in this mode.
  * \return Software filter or nullptr.
  */
-const SoftwarePixelFilter* SoftwareVideoMode::get_software_filter() const {
-  return software_filter.get();
+sf::Shader *SoftwareVideoMode::get_filter() const {
+  return shader.get();
 }
 
 }

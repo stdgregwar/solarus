@@ -1,13 +1,14 @@
 #include "solarus/graphics/RenderTargetAtlas.h"
 
+#include "solarus/graphics/RenderTexture.h"
+
 #include <SFML/Graphics/Texture.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
-#include <SFML/OpenGL.hpp>
 
 namespace Solarus {
 
 
-constexpr unsigned atlas_size = 2048;
+constexpr unsigned atlas_size = 1024;
 constexpr float inv_size = 1.f / atlas_size;
 
 RenderTargetView::RenderTargetView(Atlas &atlas,
@@ -52,7 +53,7 @@ void RenderTargetView::draw(const sf::Vertex* vertices, size_t vertexCount,sf::P
     atlas.back_target.draw(vertices,vertexCount,type,states);
 }
 
-void RenderTargetView::draw_on(SurfaceImpl& target, const Rectangle& region, const Point& dst_position, uint8_t opacity) const {
+void RenderTargetView::draw_on(RenderTexture& target, const Rectangle& region, const Point& dst_position, uint8_t opacity) const {
     Rectangle true_region = region;
     true_region.add_xy(rect.get_xy());
     sprite.setTexture(get_texture());

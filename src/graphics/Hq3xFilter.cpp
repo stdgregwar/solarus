@@ -19,35 +19,6 @@
 #include "solarus/third_party/hqx/hqx.h"
 
 namespace Solarus {
-
-/**
- * \brief Constructor.
- */
-Hq3xFilter::Hq3xFilter():
-  SoftwarePixelFilter() {
-}
-
-/**
- * \copydoc PixelFilter::get_scaling_factor
- */
-int Hq3xFilter::get_scaling_factor() const {
-  return 3;
-}
-
-/**
- * \copydoc PixelFilter::filter
- */
-void Hq3xFilter::filter(
-    const uint32_t* src,
-    int src_width,
-    int src_height,
-    uint32_t* dst) const {
-
-  // Make sure hqx is initialized.
-  Hq4xFilter::initialize_hqx();
-
-  hq3x_32(const_cast<uint32_t*>(src), dst, src_width, src_height);
-}
-
+//TODO remove
 }
 
