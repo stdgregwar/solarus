@@ -19,11 +19,20 @@
 #include "solarus/core/Debug.h"
 #include "solarus/core/QuestFiles.h"
 #include "solarus/core/QuestProperties.h"
+
 #include "solarus/lua/LuaContext.h"
 #include <physfs.h>
 #include <fstream>
 #include <cstdlib>  // exit(), mkstemp(), tmpnam()
 #include <cstdio>   // remove()
+
+#ifdef ANDROID
+#include <SDL_filesystem.h>
+#include <SDL_log.h>
+#include "solarus/core/SDLRWopsToPhysFS.h"
+#include "solarus/core/Logger.h"
+#endif
+
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>  // close()
 #endif
@@ -132,14 +141,27 @@ SOLARUS_API bool open_quest(const std::string& program_name, const std::string& 
   std::string dir_quest_path = quest_path + "/data";
   std::string archive_quest_path_1 = quest_path + "/data.solarus";
   std::string archive_quest_path_2 = quest_path + "/data.solarus.zip";
-
   const std::string& base_dir = PHYSFS_getBaseDir();
+#ifdef ANDROID
+  SDL_RWops* quest_io = SDL_RWFromFile("data.solarus","rb");
+  if(!quest_io) Debug::error("Failed to load data.solarus from APK");
+  PHYSFS_Io* physfs_io = make_io_from_sdl(quest_io);
+  SDL_Log("solarus archive size : %ld [kb]",physfs_io->length(physfs_io)/1024);
+  if(!PHYSFS_mountIo(physfs_io,"data.solarus.zip",NULL,0)) {
+      Debug::error("Failed to mount data.solarus as data : " +
+                   std::string(PHYSFS_getLastError()));
+  } else {
+      Logger::info("Mounted data.solarus as ./data");
+  }
+#else
   PHYSFS_addToSearchPath(dir_quest_path.c_str(), 1);   // data directory
   PHYSFS_addToSearchPath(archive_quest_path_1.c_str(), 1); // data.solarus archive
   PHYSFS_addToSearchPath(archive_quest_path_2.c_str(), 1); // data.solarus.zip archive
   PHYSFS_addToSearchPath((base_dir + "/" + dir_quest_path).c_str(), 1);
   PHYSFS_addToSearchPath((base_dir + "/" + archive_quest_path_1).c_str(), 1);
   PHYSFS_addToSearchPath((base_dir + "/" + archive_quest_path_2).c_str(), 1);
+#endif
+
 
   // Set the engine root write directory.
   set_solarus_write_dir(SOLARUS_WRITE_DIR);
@@ -445,6 +467,11 @@ SOLARUS_API std::string get_base_write_dir() {
 
 #if defined(SOLARUS_OSX) || defined(SOLARUS_IOS)
   return get_user_application_support_directory();
+#elif defined(ANDROID)
+  char *base_path = SDL_GetPrefPath("org.solarus-games.solarus", "solarus");
+  std::string path(base_path);
+  SDL_free(base_path);
+  return path;
 #else
   return std::string(PHYSFS_getUserDir());
 #endif

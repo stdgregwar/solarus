@@ -18,6 +18,8 @@
 #include "solarus/core/System.h"
 #include <fstream>
 #include <iostream>
+#include <sstream>
+#include <SDL_log.h>
 
 namespace Solarus {
 
@@ -52,9 +54,14 @@ namespace {
  * \param out The output stream.
  */
 SOLARUS_API void print(const std::string& message, std::ostream& out) {
-
-  uint32_t simulated_time = System::now();
+          uint32_t simulated_time = System::now();
+#ifdef ANDROID
+          std::ostringstream oss;
+          oss << "[Solarus] [" << simulated_time << "] " << message << std::endl;
+          SDL_Log("%s",oss.str().c_str());
+#else
   out << "[Solarus] [" << simulated_time << "] " << message << std::endl;
+#endif
 }
 
 /**

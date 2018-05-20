@@ -109,7 +109,7 @@ GlContext ctx;
  */
 bool GlShader::initialize() {
 #if SDL_VIDEO_DRIVER_UIKIT || SDL_VIDEO_DRIVER_ANDROID || SDL_VIDEO_DRIVER_PANDORA
-#define SDL_PROC(ret,func,params) ctx.func=func;
+#define SDL_PROC(ret,func,params) ctx.func=reinterpret_cast<ret(*)params>(func);
 #else
 #define SDL_PROC(ret,func,params) \
   do { \

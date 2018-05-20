@@ -35,6 +35,7 @@ file(
 	include/solarus/core/Game.h
 	include/solarus/core/Geometry.h
 	include/solarus/core/InputEvent.h
+	include/solarus/core/SDLRWopsToPhysFS.h
 	include/solarus/core/Logger.h
 	include/solarus/core/MainLoop.h
 	include/solarus/core/Map.h
@@ -130,7 +131,7 @@ file(
 	include/solarus/graphics/Color.h
 	include/solarus/graphics/Drawable.h
 	include/solarus/graphics/DrawablePtr.h
-        include/solarus/graphics/DrawProxies.h
+	      include/solarus/graphics/DrawProxies.h
 	include/solarus/graphics/GlArbShader.h
 	include/solarus/graphics/GlShader.h
 	include/solarus/graphics/GlTextureHandle.h
@@ -279,6 +280,7 @@ file(
 	src/core/StringResources.cpp
 	src/core/Timer.cpp
 	src/core/Treasure.cpp
+	src/core/SDLRWopsToPhysFS.cpp
 
 	src/entities/AnimatedTilePattern.cpp
 	src/entities/Arrow.cpp
