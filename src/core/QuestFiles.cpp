@@ -142,7 +142,7 @@ SOLARUS_API bool open_quest(const std::string& program_name, const std::string& 
   std::string archive_quest_path_1 = quest_path + "/data.solarus";
   std::string archive_quest_path_2 = quest_path + "/data.solarus.zip";
   const std::string& base_dir = PHYSFS_getBaseDir();
-#ifdef ANDROID
+  /*#ifdef ANDROID
   SDL_RWops* quest_io = SDL_RWFromFile("data.solarus","rb");
   if(!quest_io) Debug::error("Failed to load data.solarus from APK");
   PHYSFS_Io* physfs_io = make_io_from_sdl(quest_io);
@@ -153,14 +153,14 @@ SOLARUS_API bool open_quest(const std::string& program_name, const std::string& 
   } else {
       Logger::info("Mounted data.solarus as ./data");
   }
-#else
+  #else*/
   PHYSFS_addToSearchPath(dir_quest_path.c_str(), 1);   // data directory
   PHYSFS_addToSearchPath(archive_quest_path_1.c_str(), 1); // data.solarus archive
   PHYSFS_addToSearchPath(archive_quest_path_2.c_str(), 1); // data.solarus.zip archive
   PHYSFS_addToSearchPath((base_dir + "/" + dir_quest_path).c_str(), 1);
   PHYSFS_addToSearchPath((base_dir + "/" + archive_quest_path_1).c_str(), 1);
   PHYSFS_addToSearchPath((base_dir + "/" + archive_quest_path_2).c_str(), 1);
-#endif
+  //#endif
 
 
   // Set the engine root write directory.
